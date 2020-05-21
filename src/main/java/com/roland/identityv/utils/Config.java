@@ -4,8 +4,6 @@ import com.roland.identityv.core.IdentityV;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.Arrays;
-
 /**
  * Edit and retrieve from the config
  */
@@ -14,7 +12,7 @@ public class Config {
     public static FileConfiguration config;
 
     public Config(IdentityV plugin) {
-        this.plugin = plugin;
+        Config.plugin = plugin;
         config = plugin.getConfig();
     }
 
