@@ -4,8 +4,6 @@ import com.roland.identityv.core.IdentityV;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Uses the xpbar as a progress bar
  */
@@ -13,7 +11,7 @@ public class XPBar {
     public static IdentityV plugin;
 
     public XPBar(IdentityV plugin) {
-        this.plugin = plugin;
+        XPBar.plugin = plugin;
     }
 
     public static void decreasing(final Player p, final long ticks) {
