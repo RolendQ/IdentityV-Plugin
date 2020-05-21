@@ -1,0 +1,11 @@
+config_reload_msg: Successfully reloaded!
+trail_effect: mobspawner_flames
+trail_data: 8
+ticks_lived: 1000000
+swingbox_multiplier: 2.75
+chair_time: 60
+animations:
+  survivor:
+    heal: heart
+    incap: null
+    chair: null

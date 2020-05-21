@@ -1,0 +1,29 @@
+name: IdentityV
+main: com.roland.identityv.core.IdentityV
+version: 1.0.0
+author: Roland
+description: IdentityV port for Minecraft
+
+commands:
+  creload:
+    description: Reloads default config
+  setcipher:
+    description: Setup a cipher machine
+  sit:
+    description: Test sitting
+  resete:
+    description: Reset effects
+  edit:
+    description: Edit config
+  freeze:
+    description: Freeze a player
+  survivor:
+    description: Edit survivors
+  animate:
+    description: For testing particle effects
+  hologram:
+    description: Create a hologram
+  xpbar:
+    description: Test xp bar progression
+  sb:
+    description: Test scoreboard

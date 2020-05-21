@@ -1,0 +1,56 @@
+config_reload_msg: Successfully reloaded!
+trail_effect: footstep
+trail_data: 9
+ticks_lived: 1000000
+swingbox_multiplier: 2.75
+chair_time: 60
+animations:
+  survivor:
+    heal: heart
+    bleed: ender_signal
+    rescue: villager_thundercloud
+    struggle: potion_break
+    decode: note
+    pop: lava_pop
+    heartbeat: heart
+    incap: lavadrip
+    death: potion_break
+  hunter:
+    preswing: fireworks_spark
+    swing: potion_break
+    hit: magic_crit
+    balloon: coloured_dust
+    stun_recovery: splash
+    chair: spell
+    destroy_pallet: spell
+timers:
+  survivor:
+    chair: 60
+    bleed: 120
+    struggle_limit: 10
+    struggle_tilt_interval: 7
+    struggle: 30
+    heal: 20
+    revive: 30
+    rescue: 8
+    decode: 100
+    open_gate: 20
+    self_heal_limit: 25
+  hunter:
+    struggle_free: 50
+    hit_recovery: 40
+    miss_recovery: 20
+    swing_delay: 10
+    pallet_stun: 60
+    destroy_pallet: 40
+    chair_survivor: 30
+    balloon_survivor: 40
+attributes:
+  survivor:
+    walk: 0.2
+    incap: 0.08
+    hit_boost_length: 60
+  hunter:
+    struggle_tilt_angle: 60
+light_effect: mobspawner_flames
+light_data: 1
