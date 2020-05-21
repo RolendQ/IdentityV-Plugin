@@ -7,7 +7,7 @@ public class Console {
     public static IdentityV plugin;
 
     public Console(IdentityV plugin) {
-        this.plugin = plugin;
+        Console.plugin = plugin;
     }
 
     public static void log(String s) {
