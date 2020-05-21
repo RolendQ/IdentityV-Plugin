@@ -15,7 +15,7 @@ public class ScoreboardUtil {
     public static Objective ob;
 
     public ScoreboardUtil(IdentityV plugin) {
-        this.plugin = plugin;
+        ScoreboardUtil.plugin = plugin;
         sbm = plugin.getServer().getScoreboardManager();
         sb = sbm.getNewScoreboard();
         ob = sb.registerNewObjective("Display","");
