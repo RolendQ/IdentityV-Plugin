@@ -17,7 +17,7 @@ public class Holograms {
     public static IdentityV plugin;
 
     public Holograms(IdentityV plugin) {
-        this.plugin = plugin;
+        Holograms.plugin = plugin;
     }
 
     public static void alert(Player hunter, final Location loc) {

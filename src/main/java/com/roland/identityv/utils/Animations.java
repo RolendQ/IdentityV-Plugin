@@ -14,7 +14,7 @@ public class Animations {
     public static IdentityV plugin;
 
     public Animations(IdentityV plugin) {
-        this.plugin = plugin;
+        Animations.plugin = plugin;
     }
 
     public static void one(Location loc, String path, String key) {
