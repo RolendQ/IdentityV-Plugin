@@ -15,6 +15,7 @@ animations:
     heartbeat: heart
     incap: lavadrip
     death: potion_break
+    crows: smoke
   hunter:
     preswing: fireworks_spark
     swing: potion_break
@@ -25,8 +26,8 @@ animations:
     destroy_pallet: spell
 timers:
   survivor:
-    chair: 60
-    bleed: 120
+    chair: 240
+    bleed: 480
     struggle_limit: 10
     struggle_tilt_interval: 7
     struggle: 30
@@ -36,6 +37,7 @@ timers:
     decode: 100
     open_gate: 20
     self_heal_limit: 25
+    crows: 240
   hunter:
     struggle_free: 50
     hit_recovery: 40

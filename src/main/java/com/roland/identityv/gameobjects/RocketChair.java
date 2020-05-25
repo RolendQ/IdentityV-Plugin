@@ -4,7 +4,10 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.handlers.SitHandler;
 import com.roland.identityv.utils.Console;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 
 /**
@@ -14,21 +17,23 @@ public class RocketChair {
     public Location loc;
     public IdentityV plugin;
     public Player survivor;
+    public boolean isUsed;
 
     public RocketChair(Location loc, IdentityV plugin) {
         this.loc = loc;
         this.plugin = plugin;
+        this.survivor = null;
+        this.isUsed = false;
     }
 
     public void setSurvivor(Player survivor) {
         this.survivor = survivor;
         Console.log("Set survivor: "+survivor.getName());
-        SitHandler.sit(survivor,loc);
+        SitHandler.sit(survivor,loc.clone().add(loc.getX() < 0 ? 0.5 : -0.5, 1, loc.getZ() > 0 ? 0.5 : -0.5));
     }
 
-    public void releaseSurvivor(Player survivor) {
+    public void releaseSurvivor() {
         this.survivor = null;
-        SitHandler.unsit(survivor); // May need to move them to a specific location
     }
 
     public Player getSurvivor() {
@@ -41,6 +46,18 @@ public class RocketChair {
 
     public Location getLocation() {
         return loc;
+    }
+
+    public void fly() {
+        isUsed = true;
+        Console.log("Chair flew away!");
+        loc.getBlock().setType(Material.AIR);
+        Firework fw = (Firework) survivor.getWorld().spawnEntity(survivor.getLocation().clone().add(0,2,0), EntityType.FIREWORK);
+        //fw.detonate();
+    }
+
+    public boolean isUsed() {
+        return isUsed;
     }
 
 }

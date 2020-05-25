@@ -48,7 +48,7 @@ public class HunterSwing {
         new BukkitRunnable() {
 
             public void run() {
-                if (FreezeHandler.isFrozen(hunter) || !hunter.isOnGround()) {
+                if (FreezeHandler.isFrozen(hunter)) { // Can attack while in air
                     return;
                 }
 
@@ -78,6 +78,9 @@ public class HunterSwing {
 
                 if (closest != null) { // Hit someone
                     Animations.multiple(hunter.getLocation().add(hunter.getEyeLocation().getDirection()).add(0, 0.5, 0),"animations.hunter","hit",5);
+
+                    // Lightning for other survivors
+                    hunter.getWorld().strikeLightningEffect(hunter.getLocation());
 
                     // Recover if not carrying a survivor TODO maybe make balloon hits different
                     if (hunter.getPassenger() == null) {

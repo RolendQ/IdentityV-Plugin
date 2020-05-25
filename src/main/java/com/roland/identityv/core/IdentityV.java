@@ -25,6 +25,8 @@ public class IdentityV extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        // Test game
+
         new Console(this); // for debugging
 
         // Make sure natural regen is off
@@ -41,8 +43,7 @@ public class IdentityV extends JavaPlugin {
         new Holograms(this);
         new ScoreboardUtil(this);
 
-        // Test game
-        testGame = new Game(this);
+        testGame = new Game(this); // must be last
     }
 
     public void onDisable() {
@@ -86,7 +87,7 @@ public class IdentityV extends JavaPlugin {
         new StruggleRecoveryManager(this);
         new HeartbeatManager(this);
         new GateManager(this);
-
+        new CalibrationManager(this);
     }
 
     /**
@@ -105,6 +106,7 @@ public class IdentityV extends JavaPlugin {
         getCommand("hologram").setExecutor(new HologramCommand(this));
         getCommand("xpbar").setExecutor(new XPCommand(this));
         getCommand("sb").setExecutor(new ScoreboardCommand(this));
+        getCommand("calib").setExecutor(new CalibrationCommand(this));
     }
 
     /**

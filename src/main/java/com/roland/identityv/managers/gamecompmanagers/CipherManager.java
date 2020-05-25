@@ -62,6 +62,12 @@ public class CipherManager {
 
     }
 
+    public static void addBlackGlass() {
+        for (Cipher c : ciphers) {
+            c.addBlackGlass();
+        }
+    }
+
     public static Cipher getCipher(Location loc) {
         for (Cipher c : ciphers) {
             Console.log(c.getLocation().toString() + ": " + c.getProgress());
@@ -73,7 +79,7 @@ public class CipherManager {
         }
         //return null;
         Console.log("Created new cipher");
-        Cipher newCipher = new Cipher(plugin,loc);
+        Cipher newCipher = new Cipher(plugin,loc, plugin.getGame());
         ciphers.add(newCipher);
         return newCipher;
     }

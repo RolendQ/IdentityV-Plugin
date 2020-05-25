@@ -38,7 +38,10 @@ public class ChairPlayer {
                 Survivor s = SurvivorManager.getSurvivor(survivor);
                 s.incTimesOnChair(); // adds 1
                 if (s.getTimesOnChair() == 3) { // Dead on chair
+                    chair.fly();
                     s.death();
+                    cancel();
+                    return;
                 }
                 s.setState(State.CHAIR);
                 plugin.getServer().broadcastMessage(survivor.getName() + " was chaired");

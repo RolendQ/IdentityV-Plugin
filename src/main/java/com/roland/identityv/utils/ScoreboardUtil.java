@@ -23,12 +23,14 @@ public class ScoreboardUtil {
         ob.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Identity V");
 
         // Default setup
-        set("&e5 CIPHERS",10);
+        //set("&e5 CIPHERS",10);
         set("",9);
         // 4,3,2,1
     }
 
     public static void set(String s, int line) {
+        //if (sb == null) return;
+
         for (String entry : sb.getEntries()) {
             if (ob.getScore(entry).getScore() == line) {
                 //Console.log("reset entry");
@@ -39,7 +41,7 @@ public class ScoreboardUtil {
         s = ChatColor.translateAlternateColorCodes('&',s);
         Score sc = ob.getScore(s);
         if (sc.getScore() != 0) { // so no duplicate entries
-            Console.log("Handling duplicate entry");
+            //Console.log("Handling duplicate entry");
             sc = ob.getScore(ChatColor.translateAlternateColorCodes('&',s + "&" + line));
         }
         sc.setScore(line);

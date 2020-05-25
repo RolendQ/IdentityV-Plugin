@@ -5,6 +5,8 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.handlers.SitHandler;
+import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
+import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.AttackRecoveryManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StruggleRecoveryManager;
@@ -46,6 +48,7 @@ public class Survivor {
 
     public long lastHeartbeat;
     public int selfHeal;
+    public int crowsTimer;
 
     // Scoreboard
     public int line;
@@ -76,6 +79,7 @@ public class Survivor {
         struggleProgress = 0;
         bleedOutTimer = 0; // config to set limit
         chairTimer = 0;
+        crowsTimer = 0;
         selfHeal = 1;
 
         line = (SurvivorManager.getSurvivors().size()*2) + 2; // Line for their name
@@ -135,6 +139,25 @@ public class Survivor {
 
     public void setHunter(Player hunter) { this.hunter = hunter; }
 
+    public void incCrowsTimer() {
+        crowsTimer++;
+    }
+
+    public int getCrowsTimer() {
+        return crowsTimer;
+    }
+
+    public void clearCrowsTimer() {
+        crowsTimer = 0;
+    }
+    public boolean isVisibleToAHunter() {
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            if (!SurvivorManager.isSurvivor(p)) {
+                if (p.hasLineOfSight(player)) return true;
+            }
+        }
+        return false;
+    }
     public void incTimesOnChair() {
         timesOnChair += 1;
     }
@@ -300,6 +323,8 @@ public class Survivor {
         setAction(Action.HEAL);
         injured.setAction(Action.GETHEAL);
 
+        final double progressAtStart = injured.getHealingProgress();
+
         actionRunnable = new BukkitRunnable() {
             public void run() {
                 if (injured.getAction() != Action.GETHEAL) { // Player cleared it
@@ -308,11 +333,23 @@ public class Survivor {
                 }
                 injured.incHealingProgress();
 
+                // Calib
+                if (injured.getHealingProgress() - progressAtStart > 4) { // Window for calibration
+                    Random r = new Random();
+                    if (r.nextInt(4) == 0) {
+                        if (!CalibrationManager.hasCalibration(player)) CalibrationManager.give(player, Action.HEAL);
+                    }
+                }
+
                 // Heal
                 if (injured.getState() == State.NORMAL) {
                     player.setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
                     injured.getPlayer().setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
                     if (player.getExp() == 1) { // Finished healing
+                        if (CalibrationManager.hasCalibration(player)) {
+                            CalibrationManager.get(player).finish();
+                        }
+
                         injured.getPlayer().setHealth(injured.getPlayer().getHealth() + 2);
                         injured.setHealingProgress(0);
                         injured.getPlayer().sendMessage("You have been healed");
@@ -326,6 +363,10 @@ public class Survivor {
                     player.setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","revive"));
                     injured.getPlayer().setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","revive"));
                     if (player.getExp() == 1) { // Finished reviving
+                        if (CalibrationManager.hasCalibration(player)) {
+                            CalibrationManager.get(player).finish();
+                        }
+
                         injured.getPlayer().setHealth(2);
                         injured.getPlayer().setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
                         injured.setHealingProgress(0);
@@ -354,6 +395,7 @@ public class Survivor {
                 chaired.getPlayer().setExp((float) chaired.getRescuingProgress() / (float) Config.getInt("timers.survivor","rescue"));
 
                 if (player.getExp() == 1) { // Finished rescuing
+                    RocketChairManager.getChair(chaired.getPlayer()).releaseSurvivor();
                     SitHandler.unsit(chaired.getPlayer());
                     chaired.getPlayer().setHealth(2);
                     chaired.getPlayer().setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
@@ -371,15 +413,29 @@ public class Survivor {
     public void startDecode(final Cipher cipher) {
         setAction(Action.DECODE);
         Console.log("Start decode");
+        final double progressAtStart = cipher.getProgress();
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
+                // If 5 ciphers are done
+                if (game.getCiphersDone() == 5) {
+                    clearActionRunnable();
+                }
                 cipher.decodeBit(1);
-                //if (cipher.getProgress() % 10 == 0) cipher.notify(player);
+                if (cipher.getProgress() - progressAtStart > 4) { // Window for calibration
+                    Random r = new Random();
+                    if (r.nextInt(6) == 0) {
+                        if (!CalibrationManager.hasCalibration(player)) CalibrationManager.give(player, Action.DECODE);
+                    }
+                }
                 player.setExp((float) cipher.getProgress() / (float) Config.getInt("timers.survivor","decode"));
+                Console.log("exp: "+player.getExp());
                 if (player.getExp() == 1) {
                     cipher.pop();
                     player.sendMessage("You have finished this cipher");
+                    if (CalibrationManager.hasCalibration(player)) {
+                        CalibrationManager.get(player).finish();
+                    }
                     clearActionRunnable();
                 }
             }

@@ -8,6 +8,7 @@ import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.RocketChair;
 import com.roland.identityv.handlers.FreezeHandler;
+import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.CipherManager;
 import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
@@ -23,6 +24,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.material.MaterialData;
 
 public class PlayerInteractListener implements Listener {
     private IdentityV plugin;
@@ -84,7 +86,8 @@ public class PlayerInteractListener implements Listener {
             if (banner.getBaseColor() == DyeColor.GREEN) {
                 for (Entity entity : banner.getWorld().getNearbyEntities(banner.getLocation(),2,2,2)) {
                     if (entity.getEntityId() == p.getEntityId() && SurvivorManager.isSurvivor(p) && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) { // Survivor
-                        new DropPallet(plugin, e.getClickedBlock().getRelative(BlockFace.DOWN));
+                        org.bukkit.material.Banner bannerData = (org.bukkit.material.Banner) banner.getData();
+                        new DropPallet(plugin, e.getClickedBlock().getRelative(BlockFace.DOWN), bannerData.getAttachedFace().getOppositeFace());
                         return;
                     }
                 }
@@ -92,11 +95,11 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        // CHECK CIPHER PROGRESS
-        if (b == Material.JUKEBOX) {
-            Cipher cipher = CipherManager.getCipher(e.getClickedBlock().getLocation());
-            if (cipher != null && SurvivorManager.isSurvivor(p) && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) { // Survivor
-                cipher.notify(p);
+        // HIT CALIBRATION (CIPHER)
+        if (b == Material.BEACON) {
+            e.setCancelled(true);
+            if (CalibrationManager.hasCalibration(p) && CalibrationManager.get(p).getType() == com.roland.identityv.enums.Action.DECODE) {
+                CalibrationManager.get(p).hit();
             }
         }
     }

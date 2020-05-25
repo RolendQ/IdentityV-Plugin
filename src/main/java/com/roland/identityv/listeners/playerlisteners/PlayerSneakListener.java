@@ -1,6 +1,7 @@
 package com.roland.identityv.listeners.playerlisteners;
 
 import com.roland.identityv.actions.ChairPlayer;
+import com.roland.identityv.actions.Vault;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
@@ -13,7 +14,9 @@ import com.roland.identityv.managers.gamecompmanagers.CipherManager;
 import com.roland.identityv.managers.gamecompmanagers.GateManager;
 import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -28,6 +31,7 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 public class PlayerSneakListener implements Listener {
 
     public IdentityV plugin;
+    public static BlockFace[] faces = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
 
     public PlayerSneakListener(IdentityV plugin) {this.plugin = plugin;}
 
@@ -46,19 +50,22 @@ public class PlayerSneakListener implements Listener {
             // NORMAL state
             Survivor s = SurvivorManager.getSurvivor(p);
             if (s.getState() == State.NORMAL) {
-                // Look for adjacent cipher
-                BlockFace[] faces = {BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST, BlockFace.SOUTH};
-                for (BlockFace face : faces) {
-                    Location loc = p.getLocation().getBlock().getRelative(face).getLocation();
-                    if (loc.getBlock().getType() == Material.JUKEBOX) {
+                // Look for adjacent cipher or fence
+                for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
+                    Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
+                    if (loc.getBlock().getType() == Material.BEACON) {
                         Cipher c = CipherManager.getCipher(loc);
                         //if (c == null) Console.log("cipher is null");
                         if (c != null && !c.isDone() && s.getAction() != Action.DECODE) s.startDecode(c);
                         return;
                     }
+
+                    if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
+                        new Vault(plugin, p, loc, i, Config.getInt("attributes.survivor","vault"));
+                    }
                 }
 
-                // Look for adjacent chaired player
+                // Look for nearby chaired player
                 for (Entity entity : p.getLocation().getWorld().getNearbyEntities(p.getLocation(),2,2,2)) {
                     if (entity.getType() == EntityType.PLAYER) {
                         Survivor s2 = SurvivorManager.getSurvivor((Player) entity);
@@ -87,14 +94,23 @@ public class PlayerSneakListener implements Listener {
             }
         } else {
             // Hunter
-            if (p.isSneaking() && p.getPassenger() != null) {
-                Location loc = p.getLocation().getBlock().getRelative(BlockFace.DOWN).getLocation();
-                if (loc.getBlock().getType() == Material.IRON_BLOCK) {
+            if (p.getPassenger() == null) {
+                for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
+                    Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
+                    if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
+                        new Vault(plugin, p, loc, i, Config.getInt("attributes.hunter","vault"));
+                    }
+                }
+            } else {
+                Location loc = p.getLocation().getBlock().getLocation();
+               // Console.log(loc.getBlock().getType().toString());
+                if (loc.getBlock().getType() == Material.STEP) {
                     if (e.getPlayer().getPassenger() != null) { // TODO Change this later to be more specific
-                        RocketChair chair = RocketChairManager.getChair(p.getLocation());
+                        RocketChair chair = RocketChairManager.getChair(loc);
                         Console.log("Found rocket chair");
-
-                        new ChairPlayer(plugin, p, (Player) p.getPassenger(), chair);
+                        if (!chair.isUsed() && !chair.isOccupied()) { // Makes sure the chair is empty/not used
+                            new ChairPlayer(plugin, p, (Player) p.getPassenger(), chair);
+                        }
                         return;
                     }
                 }

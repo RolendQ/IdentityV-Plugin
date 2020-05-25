@@ -1,5 +1,6 @@
 package com.roland.identityv.handlers;
 
+import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
@@ -22,7 +23,8 @@ public class FreezeHandler {
 
     public static void unfreeze(Player player) {
         //player.removePotionEffect(PotionEffectType.JUMP);
-        player.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
+        if (SurvivorManager.isSurvivor(player)) player.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
+        else player.setWalkSpeed((float) Config.getDouble("attributes.hunter","walk"));
         //player.setFoodLevel(20);
     }
 

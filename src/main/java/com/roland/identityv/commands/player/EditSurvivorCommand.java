@@ -36,8 +36,10 @@ public class EditSurvivorCommand extends PlayerCommand {
             }
 
             if (args[0].equalsIgnoreCase("add")) {
+                if (SurvivorManager.isSurvivor(p)) return true;
+
                 SurvivorManager.addSurvivor(p.getServer().getPlayer(args[1]));
-                p.sendMessage("Added (" + SurvivorManager.getSurvivor(p).getNameLine() + ") : "+args[1]);
+                //p.sendMessage("Added (" + SurvivorManager.getSurvivor(p).getNameLine() + ") : "+args[1]);
                 return true;
             }
 

@@ -8,7 +8,9 @@ import com.roland.identityv.managers.statusmanagers.freeze.StunRecoveryManager;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Holograms;
+import org.bukkit.DyeColor;
 import org.bukkit.Effect;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -26,7 +28,7 @@ public class DropPallet {
      * @param plugin
      * @param block
      */
-    public DropPallet(IdentityV plugin, final Block block) {
+    public DropPallet(IdentityV plugin, final Block block, final BlockFace otherFace) {
         this.plugin = plugin;
 
         // TODO might make the survivor freeze and add animation
@@ -34,7 +36,21 @@ public class DropPallet {
         new BukkitRunnable() {
             public void run() {
                 block.getRelative(BlockFace.UP).setType(Material.AIR);
-                block.setType(Material.COBBLE_WALL);
+                block.setType(Material.STAINED_CLAY);
+                block.setData(DyeColor.GREEN.getData());
+
+//                BlockFace[] faces = {BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST, BlockFace.SOUTH};
+//                for (BlockFace face : faces) {
+//                    Block b = block.getRelative(face);
+//                    if (b.getType() == Material.CARPET) {
+//                        b.setType(Material.STAINED_CLAY);
+//                        b.setData(DyeColor.GREEN.getData());
+//                        return;
+//                    }
+//                }
+                Block b = block.getRelative(otherFace);
+                b.setType(Material.STAINED_CLAY);
+                b.setData(DyeColor.GREEN.getData());
 
                 //block.getWorld().createExplosion(block.getX(), block.getY(), block.getZ(),1F,false, false);
 

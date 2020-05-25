@@ -4,6 +4,7 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.utils.Config;
+import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.Holograms;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -32,7 +33,12 @@ public class HologramCommand extends PlayerCommand {
                 }
 
                 if (args[0].equalsIgnoreCase("box")) {
-                    Holograms.box(p.getLocation());
+                    Holograms.box(p,p.getLocation());
+                    return true;
+                }
+
+                if (args[0].equalsIgnoreCase("alert")) {
+                    Holograms.alert(p,p.getLocation());
                     return true;
                 }
 
@@ -41,7 +47,7 @@ public class HologramCommand extends PlayerCommand {
                     str += " " + arg;
                 }
                 str = str.substring(1);
-                Holograms.create(p.getLocation().subtract(0,0.5,0),str);
+                Holograms.create(p,p.getLocation().subtract(0,0.5,0),str);
             }
         }
         return true;

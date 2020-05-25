@@ -5,6 +5,7 @@ import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.RocketChair;
 import com.roland.identityv.utils.Console;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 import java.util.HashSet;
 
@@ -31,5 +32,14 @@ public class RocketChairManager {
         RocketChair newChair = new RocketChair(loc,plugin);
         chairs.add(newChair);
         return newChair;
+    }
+
+    public static RocketChair getChair(Player p) {
+        for (RocketChair chair : chairs) {
+            if (chair.getSurvivor() == p) {
+                return chair;
+            }
+        }
+        return null;
     }
 }

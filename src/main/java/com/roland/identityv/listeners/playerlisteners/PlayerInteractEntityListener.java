@@ -6,6 +6,7 @@ import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.FreezeHandler;
+import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.EntityType;
@@ -33,6 +34,8 @@ public class PlayerInteractEntityListener implements Listener {
             return;
         }
 
+        Player p = e.getPlayer();
+
         if (e.getRightClicked().getType() == EntityType.PLAYER) {
 
             Player clickedP = (Player) e.getRightClicked();
@@ -42,10 +45,18 @@ public class PlayerInteractEntityListener implements Listener {
             // HUNTER BALLOON
             if (!SurvivorManager.isSurvivor(e.getPlayer())) {
                 if (SurvivorManager.getSurvivor(clickedP).getState() == State.INCAP && clickedP.getVehicle() == null) {
-                    new BalloonPlayer(plugin, e.getPlayer(), clickedP);
+                    new BalloonPlayer(plugin, p, clickedP);
                 }
             // SURVIVOR
             } else {
+                // HEAL CALIBRATION
+                if (SurvivorManager.getSurvivor(p).getAction() == Action.HEAL) {
+                    if (CalibrationManager.hasCalibration(p) && CalibrationManager.get(p).getType() == com.roland.identityv.enums.Action.HEAL) {
+                        CalibrationManager.get(p).hit();
+                    }
+                    return;
+                }
+
                 // HEAL
                 if (SurvivorManager.getSurvivor(clickedP).getState() == State.NORMAL ||
                         SurvivorManager.getSurvivor(clickedP).getState() == State.INCAP) {

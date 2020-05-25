@@ -3,8 +3,10 @@ package com.roland.identityv.gameobjects;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
+import org.bukkit.DyeColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
@@ -33,6 +35,7 @@ public class Cipher {
         this.plugin = plugin;
         this.block = loc.getWorld().getBlockAt(loc);
         this.progress = 0;
+        this.particlesLoc = new Location(loc.getWorld(), loc.getX(), loc.getY() + 1.1, loc.getZ());
         this.game = game;
     }
 
@@ -61,5 +64,12 @@ public class Cipher {
     public void pop() {
         Animations.random(particlesLoc,"animations.survivor","pop",1, 5);
         game.incCiphersDone();
+        addBlackGlass();
+    }
+
+    public void addBlackGlass() {
+        Block b = loc.getWorld().getBlockAt(loc.add(0,1,0));
+        b.setType(Material.STAINED_GLASS);
+        b.setData(DyeColor.BLACK.getData());
     }
 }

@@ -27,3 +27,5 @@ commands:
     description: Test xp bar progression
   sb:
     description: Test scoreboard
+  calib:
+    description: Test calibration

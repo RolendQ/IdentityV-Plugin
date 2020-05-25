@@ -39,6 +39,13 @@ public abstract class ActionManager {
         tasks.get(p).runTaskLater(plugin, time);
     }
 
+    public void remove(Player p) {
+        if (tasks.containsKey(p)) {
+            tasks.get(p).cancel();
+            tasks.remove(p);
+        }
+    }
+
     public boolean isDoingTask(Player p) {
         return tasks.containsKey(p);
     }

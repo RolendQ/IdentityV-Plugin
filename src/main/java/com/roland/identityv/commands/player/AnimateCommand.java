@@ -1,6 +1,7 @@
 package com.roland.identityv.commands.player;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.enums.AnimationsEnum;
 import com.roland.identityv.utils.Animations;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -23,8 +24,8 @@ public class AnimateCommand extends PlayerCommand {
     public boolean onPlayerCommand(Player p, Command command, String s, String[] args) {
         if (command.getName().equalsIgnoreCase("animate")) {
             if (args.length >= 3) {
-                switch (args[0].toLowerCase()) {
-                    case "one":
+                switch (AnimationsEnum.valueOf(args[0].toLowerCase())) {
+                    case one:
                         if (args.length >= 4)
                             Animations.one(
                                 p.getEyeLocation(),
@@ -40,7 +41,7 @@ public class AnimateCommand extends PlayerCommand {
                             );
                         break;
 
-                    case "cube":
+                    case cube:
                         Animations.cube(
                             p.getEyeLocation(),
                             args[1],
@@ -49,7 +50,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "helix":
+                    case helix:
                         Animations.helix(
                             p.getEyeLocation(),
                             args[1],
@@ -58,7 +59,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "sphere":
+                    case sphere:
                         Animations.sphere(
                             p.getEyeLocation(),
                             args[1],
@@ -67,7 +68,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "ring":
+                    case ring:
                         Animations.ring(
                             p.getEyeLocation(),
                             args[1],
@@ -76,7 +77,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "random":
+                    case random:
                         Animations.random(
                             p.getEyeLocation(),
                             args[1],
@@ -86,7 +87,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "multiple":
+                    case multiple:
                         Animations.multiple(
                             p.getEyeLocation(),
                             args[1],
@@ -95,7 +96,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "decreasing_ring":
+                    case decreasing_ring:
                         Animations.decreasing_ring(
                             p.getEyeLocation(),
                             args[1],
@@ -105,7 +106,7 @@ public class AnimateCommand extends PlayerCommand {
                         );
                         break;
 
-                    case "falling_rings":
+                    case falling_rings:
                         Animations.falling_rings(
                             p.getEyeLocation(),
                             args[1],

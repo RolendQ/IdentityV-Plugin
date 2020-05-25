@@ -41,6 +41,14 @@ public abstract class FreezeActionManager { // used to extend ActionManager
         tasks.get(p).runTaskLater(plugin, time);
     }
 
+    public void remove(Player p) {
+        if (tasks.containsKey(p)) {
+            FreezeHandler.unfreeze(p);
+            tasks.get(p).cancel();
+            tasks.remove(p);
+        }
+    }
+
     public boolean isFrozen(Player p) {
         return tasks.containsKey(p);
     }
