@@ -5,6 +5,7 @@ import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.ScoreboardUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -52,11 +53,18 @@ public class SurvivorManager {
 
     }
 
+    public static void reset() {
+        survivors = new HashMap<Player, Survivor>();
+        ScoreboardUtil.reset();
+    }
+
     public static void addSurvivor(Player p) {
         survivors.put(p, new Survivor(plugin,p,plugin.getGame()));
     }
 
     public static void removeSurvivor(Player p) {
+        ScoreboardUtil.clear(survivors.get(p).getNameLine());
+        ScoreboardUtil.clear(survivors.get(p).getBarLine());
         survivors.remove(p);
     }
 
@@ -68,5 +76,34 @@ public class SurvivorManager {
 
     public static Collection<Survivor> getSurvivors() {
         return survivors.values();
+    }
+
+    // Runs whenever someone dies or escapes
+    public static void checkIfOver() {
+        int escapeCount = 0;
+        int playersLeft = 0;
+        for (Survivor s : getSurvivors()) {
+            if (s.getState() == State.ESCAPE) {
+                escapeCount++;
+                continue;
+            }
+            if (s.getState() != State.DEAD && s.getState() != State.ESCAPE) {
+                playersLeft++;
+            }
+        }
+
+        if (playersLeft == 1) {
+            if (DungeonManager.getActiveDungeon() != null) {
+                DungeonManager.getActiveDungeon().spawn();
+            }
+            return;
+        }
+
+        if (playersLeft == 0) {
+            // Game Over
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
+                p.sendTitle(ChatColor.RED + "Game Over!", ChatColor.GOLD + "" + escapeCount + " Survivors Escaped");
+            }
+        }
     }
 }

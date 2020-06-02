@@ -10,13 +10,12 @@ import com.roland.identityv.gameobjects.Gate;
 import com.roland.identityv.gameobjects.RocketChair;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.SitHandler;
-import com.roland.identityv.managers.gamecompmanagers.CipherManager;
-import com.roland.identityv.managers.gamecompmanagers.GateManager;
-import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
-import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.managers.gamecompmanagers.*;
+import com.roland.identityv.managers.statusmanagers.VaultManager;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import org.bukkit.DyeColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -47,10 +46,16 @@ public class PlayerSneakListener implements Listener {
 
         // Survivor
         if (SurvivorManager.isSurvivor(p)) {
-            // NORMAL state
             Survivor s = SurvivorManager.getSurvivor(p);
+
+            // Check for Dungeon first
+            if (p.getLocation().getBlock().getType() == Material.DAYLIGHT_DETECTOR) {
+                s.escape();
+            }
+
+            // NORMAL State
             if (s.getState() == State.NORMAL) {
-                // Look for adjacent cipher or fence
+                // Look for adjacent cipher or clay to vault
                 for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
                     Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
                     if (loc.getBlock().getType() == Material.BEACON) {
@@ -61,7 +66,10 @@ public class PlayerSneakListener implements Listener {
                     }
 
                     if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
-                        new Vault(plugin, p, loc, i, Config.getInt("attributes.survivor","vault"));
+                        if (!VaultManager.getInstance().hasNearbyVaults(p)) {
+                            new Vault(plugin, p, loc, i, Config.getInt("attributes.survivor", "vault"));
+                            return;
+                        }
                     }
                 }
 
@@ -69,7 +77,7 @@ public class PlayerSneakListener implements Listener {
                 for (Entity entity : p.getLocation().getWorld().getNearbyEntities(p.getLocation(),2,2,2)) {
                     if (entity.getType() == EntityType.PLAYER) {
                         Survivor s2 = SurvivorManager.getSurvivor((Player) entity);
-                        if (s2 != null && s2.getState() == State.CHAIR) {
+                        if (s2 != null && s2.getAction() != Action.GETRESCUE && s2.getState() == State.CHAIR) {
                             s.startRescue(s2);
                             return;
                         }
@@ -77,12 +85,11 @@ public class PlayerSneakListener implements Listener {
                 }
 
                 // Look for touching gate pad
-                // TODO make sure 5 ciphers popped
                 Location head = p.getLocation().getBlock().getRelative(BlockFace.UP).getLocation();
                 if (p.getWorld().getBlockAt(head).getType() == Material.TRIPWIRE_HOOK) {
                     Console.log("Found gate");
                     Gate g = GateManager.getGate(head);
-                    if (!g.isDone()) s.startOpen(g);
+                    if (!g.isDone() && g.getOpener() == null) s.startOpen(g); // must have 5 ciphers done
                     return;
                 }
             }
@@ -92,31 +99,34 @@ public class PlayerSneakListener implements Listener {
                     s.startSelfHeal();
                 }
             }
-        } else {
+        } else if (HunterManager.isHunter(p)) {
             // Hunter
             if (p.getPassenger() == null) {
+                // Vault
                 for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
                     Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
                     if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
-                        new Vault(plugin, p, loc, i, Config.getInt("attributes.hunter","vault"));
+                        if (!VaultManager.getInstance().hasNearbyVaults(p)) {
+                            new Vault(plugin, p, loc, i, Config.getInt("attributes.hunter", "vault"));
+                        }
                     }
                 }
             } else {
+                // BALLOON
+                Survivor s = SurvivorManager.getSurvivor((Player) p.getPassenger());
+
                 Location loc = p.getLocation().getBlock().getLocation();
-               // Console.log(loc.getBlock().getType().toString());
+                // CHAIR
                 if (loc.getBlock().getType() == Material.STEP) {
-                    if (e.getPlayer().getPassenger() != null) { // TODO Change this later to be more specific
-                        RocketChair chair = RocketChairManager.getChair(loc);
-                        Console.log("Found rocket chair");
-                        if (!chair.isUsed() && !chair.isOccupied()) { // Makes sure the chair is empty/not used
-                            new ChairPlayer(plugin, p, (Player) p.getPassenger(), chair);
-                        }
-                        return;
+                    RocketChair chair = RocketChairManager.getChair(loc);
+                    if (!chair.isUsed() && !chair.isOccupied()) { // Makes sure the chair is empty/not used
+                        new ChairPlayer(plugin, HunterManager.getHunter(p), s, chair);
                     }
+                    return;
                 }
 
-                // Drop TODO Move this to hunter class
-                SurvivorManager.getSurvivor((Player) p.getPassenger()).drop();
+                // DROP
+                s.drop();
             }
         }
     }

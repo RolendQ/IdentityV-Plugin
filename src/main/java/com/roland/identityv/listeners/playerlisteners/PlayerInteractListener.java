@@ -7,11 +7,12 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.RocketChair;
+import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.gameobjects.items.FlareGun;
+import com.roland.identityv.gameobjects.items.Football;
+import com.roland.identityv.gameobjects.items.Perfume;
 import com.roland.identityv.handlers.FreezeHandler;
-import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
-import com.roland.identityv.managers.gamecompmanagers.CipherManager;
-import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
-import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.managers.gamecompmanagers.*;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import org.bukkit.DyeColor;
@@ -25,6 +26,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.material.MaterialData;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 public class PlayerInteractListener implements Listener {
     private IdentityV plugin;
@@ -40,67 +43,97 @@ public class PlayerInteractListener implements Listener {
     public void onPlayerInteract(final PlayerInteractEvent e) {
         ConsoleCommandSender console = plugin.getServer().getConsoleSender();
 
-        Player p = e.getPlayer();
+        final Player p = e.getPlayer();
 
         if (FreezeHandler.isFrozen(p)) { // Return if they are frozen
+            e.setCancelled(true);
             return;
         }
 
-        // ATTACK
+        // LEFT CLICK ACTIONS
         if (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) {
-            // Hunter swing
-            if (p.getItemInHand().getType() == Material.GOLD_SWORD) {
-                new HunterSwing(plugin,p);
-                return;
-            }
-
-            // Survivor struggle
-            if (SurvivorManager.isSurvivor(p) && SurvivorManager.getSurvivor(p).getState() == State.BALLOON) {
-                if ((lastWorldTime / Config.getInt("timers.survivor","struggle_limit")) != (p.getWorld().getTime() / Config.getInt("timers.survivor","struggle_limit"))) { // Limits speed
-                    Console.log("Struggling: " + SurvivorManager.getSurvivor(p).getStruggleProgress());
-                    SurvivorManager.getSurvivor(p).struggle();
-                    lastWorldTime = p.getWorld().getTime();
+            // HUNTER
+            if (HunterManager.isHunter(p)) {
+                // SWING
+                if (p.getItemInHand().getType() == Material.GOLD_SWORD) {
+                    new HunterSwing(plugin, HunterManager.getHunter(p));
                     return;
                 }
             }
-        }
 
-        if (e.getClickedBlock() == null || e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        // RIGHT CLICK ACTIONS
-        Material b = e.getClickedBlock().getType();
+            // SURVIVOR
+            if (SurvivorManager.isSurvivor(p)) {
+                Survivor s = SurvivorManager.getSurvivor(p);
 
-        // HUNTER DESTROY PALLET
-        if (b == Material.COBBLE_WALL) {
-            for (Entity entity : e.getClickedBlock().getWorld().getNearbyEntities(e.getClickedBlock().getLocation(),1,1,1)) {
-                if (entity.getEntityId() == p.getEntityId() && !SurvivorManager.isSurvivor(p)) { // Hunter
-                    new DestroyPallet(plugin, e.getClickedBlock(), p);
-                    return;
+                // SURVIVOR HIT CALIBRATION (CIPHER)
+                if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.BEACON) {
+                    e.setCancelled(true);
+                    if (CalibrationManager.hasCalibration(s) && CalibrationManager.get(s).getType() == com.roland.identityv.enums.Action.DECODE) {
+                        CalibrationManager.get(s).hit();
+                    }
                 }
-            }
-            return;
-        }
 
-        // SURVIVOR DROP PALLET
-        if (b == Material.WALL_BANNER) {
-            Banner banner = (Banner) e.getClickedBlock().getState();
-            if (banner.getBaseColor() == DyeColor.GREEN) {
-                for (Entity entity : banner.getWorld().getNearbyEntities(banner.getLocation(),2,2,2)) {
-                    if (entity.getEntityId() == p.getEntityId() && SurvivorManager.isSurvivor(p) && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) { // Survivor
-                        org.bukkit.material.Banner bannerData = (org.bukkit.material.Banner) banner.getData();
-                        new DropPallet(plugin, e.getClickedBlock().getRelative(BlockFace.DOWN), bannerData.getAttachedFace().getOppositeFace());
+                // STRUGGLE
+                if (s.getState() == State.BALLOON) {
+                    if ((lastWorldTime / Config.getInt("timers.survivor", "struggle_limit")) != (p.getWorld().getTime() / Config.getInt("timers.survivor", "struggle_limit"))) { // Limits speed
+                        Console.log("Struggling: " + s.getStruggleProgress());
+                        s.struggle();
+                        lastWorldTime = p.getWorld().getTime();
                         return;
                     }
                 }
             }
-            return;
         }
 
-        // HIT CALIBRATION (CIPHER)
-        if (b == Material.BEACON) {
-            e.setCancelled(true);
-            if (CalibrationManager.hasCalibration(p) && CalibrationManager.get(p).getType() == com.roland.identityv.enums.Action.DECODE) {
-                CalibrationManager.get(p).hit();
+        // RIGHT CLICK ACTIONS
+        if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+
+            // AIR OR BLOCK
+            if (SurvivorManager.isSurvivor(p)) {
+                Survivor s = SurvivorManager.getSurvivor(p);
+                // ITEMS
+                if (p.getItemInHand() != null && ItemManager.isItem(p.getItemInHand().getType())) {
+                    ItemManager.useItem(p.getItemInHand().getType(),s);
+                }
+            }
+
+            // BLOCK ONLY
+            if (e.getClickedBlock() == null) return;
+
+            // RIGHT CLICK ACTIONS
+            Material b = e.getClickedBlock().getType();
+
+            if (b == Material.BEACON) e.setCancelled(true);
+
+            // HUNTER DESTROY PALLET
+            if (HunterManager.isHunter(p)) {
+                if (b == Material.COBBLE_WALL) {
+                    for (Entity entity : e.getClickedBlock().getWorld().getNearbyEntities(e.getClickedBlock().getLocation(), 1, 1, 1)) {
+                        if (entity.getEntityId() == p.getEntityId() && HunterManager.isHunter(p)) { // Hunter
+                            new DestroyPallet(plugin, e.getClickedBlock(), HunterManager.getHunter(p));
+                            return;
+                        }
+                    }
+                    return;
+                }
+            }
+            if (SurvivorManager.isSurvivor(p)) {
+                // SURVIVOR DROP PALLET
+                if (b == Material.WALL_BANNER) {
+                    Banner banner = (Banner) e.getClickedBlock().getState();
+                    if (banner.getBaseColor() == DyeColor.GREEN) {
+                        for (Entity entity : banner.getWorld().getNearbyEntities(banner.getLocation(), 2, 2, 2)) {
+                            if (entity.getEntityId() == p.getEntityId() && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) { // Survivor
+                                org.bukkit.material.Banner bannerData = (org.bukkit.material.Banner) banner.getData();
+                                new DropPallet(plugin, SurvivorManager.getSurvivor(p), e.getClickedBlock().getRelative(BlockFace.DOWN), bannerData.getAttachedFace().getOppositeFace());
+                                return;
+                            }
+                        }
+                    }
+                    return;
+                }
             }
         }
+
     }
 }

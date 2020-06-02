@@ -4,16 +4,21 @@ import com.roland.identityv.core.IdentityV;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Edit and retrieve from the config
  */
 public class Config {
     public static IdentityV plugin;
     public static FileConfiguration config;
+    public static FileConfiguration mapConfig;
 
     public Config(IdentityV plugin) {
         Config.plugin = plugin;
         config = plugin.getConfig();
+        mapConfig = plugin.getMapConfig();
     }
 
     public static void set(String key, String value) {
@@ -97,5 +102,33 @@ public class Config {
             cs = cs.getConfigurationSection(sections[i]);
         }
         return cs;
+    }
+
+    public static List<String> getMapData(String path) {
+        try {
+            return mapConfig.getStringList(path);
+        } catch (Exception e) {
+            Console.log("Exception");
+            return null;
+        }
+    }
+
+    public static void addMapData(String path, String data) {
+        try {
+            List<String> list = mapConfig.getStringList(path);
+            list.add(data);
+            mapConfig.set(path, list);
+        } catch (Exception e) {
+//            Console.log("Created new list");
+//            ArrayList<String> newList = new ArrayList<String>();
+//            newList.add(data);
+//            mapConfig.set(path, newList);
+        }
+    }
+
+    public static void clearMapData() {
+        for (String key : mapConfig.getKeys(false)){
+            mapConfig.set(key,null);
+        }
     }
 }

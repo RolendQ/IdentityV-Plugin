@@ -4,6 +4,7 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.RocketChair;
+import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Console;
 import org.bukkit.Location;
 import org.bukkit.command.ConsoleCommandSender;
@@ -26,30 +27,6 @@ public class CipherManager {
     public CipherManager(final IdentityV plugin) {
         this.plugin = plugin;
         ciphers = new HashSet<Cipher>();
-
-//        new BukkitRunnable() {
-//
-//            public void run() {
-//                ConsoleCommandSender console = plugin.getServer().getConsoleSender();
-//
-//                for (Cipher c : ciphers) {
-//                    if (c.isDone()) return;
-//
-//                    for (Entity entity : c.getLocation().getWorld().getNearbyEntities(c.getLocation(),2,2,2)) {
-//                        if (entity.getType() == EntityType.PLAYER) {
-//                            Player p = (Player) entity;
-//                            // Must be survivor and NORMAL state
-//                            if (SurvivorManager.isSurvivor(p) && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) {
-//                                if (p.isSneaking()) {
-//                                    c.decodeBit(1); // 1 for now
-//                                    if (c.getProgress() % 10 == 0) c.notify(p);
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }.runTaskTimer(plugin, 0, 10);
     }
 
     public static HashSet<Cipher> ciphers;
@@ -84,4 +61,20 @@ public class CipherManager {
         return newCipher;
     }
 
+    public static void removeDecodingSurvivor(Survivor survivor) {
+        for (Cipher c : ciphers) {
+            if (c.getSurvivorsDecoding().contains(survivor)) {
+                c.getSurvivorsDecoding().remove(survivor);
+            }
+        }
+    }
+
+    public static Cipher getCipherFromSurvivor(Survivor survivor) {
+        for (Cipher c : ciphers) {
+            if (c.getSurvivorsDecoding().contains(survivor)) {
+                return c;
+            }
+        }
+        return null;
+    }
 }

@@ -3,6 +3,7 @@ package com.roland.identityv.actions;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.managers.statusmanagers.VaultManager;
 import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.Holograms;
 import org.bukkit.Location;
@@ -23,6 +24,10 @@ public class Vault {
 
     public Vault(IdentityV plugin, final Player p, final Location firstLoc, final int direction, int speed) {
         this.plugin = plugin;
+        // Both survivors and hunters can vault
+
+        VaultManager.getInstance().add(p,speed);
+
         final int[] frame = {0};
         if (SurvivorManager.isSurvivor(p)) {
             SurvivorManager.getSurvivor(p).setAction(Action.VAULT);
@@ -31,7 +36,7 @@ public class Vault {
             for (Entity entity : p.getWorld().getNearbyEntities(p.getLocation(),20,20,20)) {
                 if (entity.getType() == EntityType.PLAYER) {
                     Player p2 = (Player) entity;
-                    if (!SurvivorManager.isSurvivor(p)) { // Hunter
+                    if (!SurvivorManager.isSurvivor(p2) && !p2.hasLineOfSight(p)) { // Hunter
                         Holograms.alert(p2,p.getLocation());
                     }
                 }

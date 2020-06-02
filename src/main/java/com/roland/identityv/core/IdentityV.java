@@ -6,19 +6,29 @@ import com.roland.identityv.gameobjects.Game;
 import com.roland.identityv.listeners.entitylisteners.EntityDamageByEntityListener;
 import com.roland.identityv.listeners.entitylisteners.EntityDamageListener;
 import com.roland.identityv.listeners.entitylisteners.EntityDismountListener;
+import com.roland.identityv.listeners.entitylisteners.EntityShootBowListener;
 import com.roland.identityv.listeners.playerlisteners.*;
 import com.roland.identityv.managers.gamecompmanagers.*;
+import com.roland.identityv.managers.statusmanagers.CancelProtectionManager;
 import com.roland.identityv.managers.statusmanagers.SwingManager;
+import com.roland.identityv.managers.statusmanagers.VaultManager;
 import com.roland.identityv.managers.statusmanagers.freeze.*;
 import com.roland.identityv.utils.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
 
 public class IdentityV extends JavaPlugin {
 
     public FileConfiguration config;
     public Game testGame;
+
+    public File mapFile;
+    public FileConfiguration mapConfig;
 
     /**
      * Sets up everything
@@ -32,7 +42,6 @@ public class IdentityV extends JavaPlugin {
         // Make sure natural regen is off
 
         loadConfigFiles();
-        //reloadConfigs();
         setupManagers();
         registerCommands();
         registerListeners();
@@ -42,12 +51,17 @@ public class IdentityV extends JavaPlugin {
         new XPBar(this);
         new Holograms(this);
         new ScoreboardUtil(this);
+        new NPCs(this);
 
-        testGame = new Game(this); // must be last
+        createTestGame(); // must be last
     }
 
     public void onDisable() {
         //
+    }
+
+    public void createTestGame() {
+        testGame = new Game(this);
     }
 
     /**
@@ -58,12 +72,15 @@ public class IdentityV extends JavaPlugin {
         config.options().copyDefaults(true);
         saveConfig();
 
+        mapFile = new File(this.getDataFolder().getPath(), "mapConfig.yml");
 
         reloadConfigs(); // All configs
     }
 
     public void reloadConfigs() {
         reloadConfig(); // Main config.yml
+
+        mapConfig = YamlConfiguration.loadConfiguration(mapFile);
     }
 
     /**
@@ -88,6 +105,11 @@ public class IdentityV extends JavaPlugin {
         new HeartbeatManager(this);
         new GateManager(this);
         new CalibrationManager(this);
+        new VaultManager(this);
+        new HunterManager(this);
+        new ItemManager(this);
+        new DungeonManager(this);
+        new CancelProtectionManager(this);
     }
 
     /**
@@ -107,6 +129,9 @@ public class IdentityV extends JavaPlugin {
         getCommand("xpbar").setExecutor(new XPCommand(this));
         getCommand("sb").setExecutor(new ScoreboardCommand(this));
         getCommand("calib").setExecutor(new CalibrationCommand(this));
+        getCommand("debug").setExecutor(new DebugTestCommand(this));
+        getCommand("map").setExecutor(new MapCommand(this));
+        getCommand("hunter").setExecutor(new EditHunterCommand(this));
     }
 
     /**
@@ -124,10 +149,24 @@ public class IdentityV extends JavaPlugin {
         pm.registerEvents(new PlayerRespawnListener(this), this);
         pm.registerEvents(new PlayerInteractEntityListener(this), this);
         pm.registerEvents(new EntityDismountListener(this), this);
+        pm.registerEvents(new PlayerQuitListener(this), this);
+        pm.registerEvents(new EntityShootBowListener(this), this);
     }
 
     public Game getGame() {
         // for now
         return testGame;
+    }
+
+    public FileConfiguration getMapConfig() {
+        return mapConfig;
+    }
+
+    public void saveMapConfig() {
+        try {
+            mapConfig.save(mapFile);
+        } catch (IOException e) {
+
+        }
     }
 }

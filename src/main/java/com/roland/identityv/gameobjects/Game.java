@@ -2,6 +2,7 @@ package com.roland.identityv.gameobjects;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.managers.gamecompmanagers.CipherManager;
+import com.roland.identityv.managers.gamecompmanagers.DungeonManager;
 import com.roland.identityv.utils.ScoreboardUtil;
 
 /**
@@ -18,13 +19,20 @@ public class Game {
     public Game(IdentityV plugin) {
         this.plugin = plugin;
         ScoreboardUtil.set("&e5 CIPHERS",10);
+        this.ciphersDone = 0;
         //this.cipherM = cipherM;
     }
 
 
     public void incCiphersDone() {
         ciphersDone++;
-        if (ciphersDone == 5) {
+
+        if (ciphersDone == 2) {
+            plugin.getServer().broadcastMessage("Dungeon has spawned!");
+            DungeonManager.spawnRandom();
+        }
+
+        if (ciphersDone >= 5) {
             ScoreboardUtil.set("&eEXIT GATES ARE ACTIVE", 10);
             CipherManager.addBlackGlass();
         } else {

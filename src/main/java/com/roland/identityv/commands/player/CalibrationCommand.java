@@ -4,6 +4,7 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.handlers.FreezeHandler;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
+import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 
@@ -15,7 +16,7 @@ public class CalibrationCommand extends PlayerCommand {
     @Override
     public boolean onPlayerCommand(Player p, Command command, String s, String[] args) {
         if (command.getName().equalsIgnoreCase("calib")) {
-            CalibrationManager.give(p, Action.DECODE);
+            CalibrationManager.give(SurvivorManager.getSurvivor(p), Action.DECODE);
         }
         return true;
     }

@@ -1,6 +1,7 @@
 package com.roland.identityv.managers.gamecompmanagers;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Adjustments;
 import org.bukkit.Effect;
@@ -28,21 +29,20 @@ public class HeartbeatManager {
             public void run() {
                 ConsoleCommandSender console = plugin.getServer().getConsoleSender();
 
+                // Shows only for the respective survivor
                 for (Survivor s : SurvivorManager.getSurvivors()) {
-                    for (Player p : plugin.getServer().getOnlinePlayers()) {
-                        if (SurvivorManager.isSurvivor(p)) return;
+                    for (Hunter h : HunterManager.getHunters()) {
+                        double distance = s.getPlayer().getLocation().distance(h.getPlayer().getLocation());
 
-                        double distance = s.getPlayer().getLocation().distance(p.getLocation());
+                        Location loc = s.getPlayer().getLocation().add(0, 2, 0);
 
-                        Location loc = s.getPlayer().getLocation().add(0,2,0);
-
-                        long currentTime = p.getWorld().getTime();
+                        long currentTime = h.getPlayer().getWorld().getTime();
                         if (currentTime - s.getLastHeartbeat() > Adjustments.getHeartRate(distance)) {
                             try {
-                                p.playSound(loc, Sound.BLAZE_HIT, (float) ((100-(4*distance))/100), 1);
+                                s.getPlayer().playSound(loc, Sound.BLAZE_HIT, (float) ((100 - (4 * distance)) / 100), 1);
                                 s.setLastHeartbeat(currentTime);
                                 String effect = plugin.getConfig().getConfigurationSection("animations").getConfigurationSection("survivor").getString("heartbeat").toUpperCase();
-                                p.getWorld().playEffect(loc, Effect.valueOf(effect), 1);
+                                s.getPlayer().playEffect(loc, Effect.valueOf(effect), 1);
                             } catch (Exception e) {
 
                             }

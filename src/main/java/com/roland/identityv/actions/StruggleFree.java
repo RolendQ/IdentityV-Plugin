@@ -2,6 +2,8 @@ package com.roland.identityv.actions;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.Hunter;
+import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.SitHandler;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StruggleRecoveryManager;
@@ -20,22 +22,25 @@ public class StruggleFree {
      * @param hunter
      * @param survivor
      */
-    public StruggleFree(IdentityV plugin, final Player hunter, final Player survivor) {
+    public StruggleFree(IdentityV plugin, final Hunter hunter, final Survivor survivor) {
         this.plugin = plugin;
-        SitHandler.unsit(survivor);
+        final Player hunterP = hunter.getPlayer();
+        final Player survivorP = survivor.getPlayer();
+
+        SitHandler.unsit(survivorP);
         // Stun hunter
 
-        Animations.one(survivor.getLocation(),"animations.survivor","struggle",11);
+        Animations.one(survivorP.getLocation(),"animations.survivor","struggle",11);
 
-        plugin.getServer().broadcastMessage(survivor.getName() + " struggled free!");
+        plugin.getServer().broadcastMessage(survivorP.getName() + " struggled free!");
 
         new BukkitRunnable() {
 
             public void run() {
-                survivor.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
-                survivor.setHealth(2);
-                SurvivorManager.getSurvivor(survivor).setState(State.NORMAL);
-                StruggleRecoveryManager.getInstance().add(hunter,Config.getInt("timers.hunter","struggle_free"));
+                survivorP.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
+                survivorP.setHealth(2);
+                survivor.setState(State.NORMAL);
+                StruggleRecoveryManager.getInstance().add(hunterP,Config.getInt("timers.hunter","struggle_free"));
             }
         }.runTaskLater(plugin, 20); // Must add a delay or else they don't get dismounted
     }

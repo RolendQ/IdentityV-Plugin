@@ -13,6 +13,7 @@ public class ScoreboardUtil {
     public static ScoreboardManager sbm;
     public static Scoreboard sb;
     public static Objective ob;
+    public static Team hiddenNames;
 
     public ScoreboardUtil(IdentityV plugin) {
         ScoreboardUtil.plugin = plugin;
@@ -26,17 +27,31 @@ public class ScoreboardUtil {
         //set("&e5 CIPHERS",10);
         set("",9);
         // 4,3,2,1
+
+
+        // For hidden name tags
+        hiddenNames = sb.registerNewTeam("hiddenNames");
+        hiddenNames.setNameTagVisibility(NameTagVisibility.NEVER);
     }
 
-    public static void set(String s, int line) {
-        //if (sb == null) return;
+    public static void reset() {
+        for (String entry : sb.getEntries()) {
+            sb.resetScores(entry);
+        }
+        set("",9);
+    }
 
+    public static void clear(int line) {
         for (String entry : sb.getEntries()) {
             if (ob.getScore(entry).getScore() == line) {
                 //Console.log("reset entry");
                 sb.resetScores(entry);
             }
         }
+    }
+
+    public static void set(String s, int line) {
+        clear(line);
 
         s = ChatColor.translateAlternateColorCodes('&',s);
         Score sc = ob.getScore(s);
@@ -70,5 +85,15 @@ public class ScoreboardUtil {
 
     public static void setBar(float percentage, String color, int line) {
         set(createBar(percentage,color),line);
+    }
+
+    public static void addNPCToTeam(String name) {
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            if (!hiddenNames.hasEntry(p.getDisplayName())) {
+                hiddenNames.addEntry(p.getDisplayName());
+            }
+        }
+        //Console.log("Adding to hiddenNames: "+name);
+        hiddenNames.addEntry(name);
     }
 }

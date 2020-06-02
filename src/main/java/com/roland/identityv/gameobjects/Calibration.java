@@ -6,6 +6,7 @@ import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.utils.Console;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -14,14 +15,18 @@ import java.util.Random;
 public class Calibration {
     public int progress; // exp level
     public int goal;
+    public Survivor survivor;
     public Player player;
     public BukkitRunnable task;
     public int type;
 
+    public boolean beingRemoved = false;
+
     public IdentityV plugin;
 
-    public Calibration(final IdentityV plugin, final Player player, final int type) {
-        this.player = player;
+    public Calibration(final IdentityV plugin, Survivor survivor, final int type) {
+        this.player = survivor.getPlayer();
+        this.survivor = survivor;
         this.plugin = plugin;
         this.type = type;
         progress = 0;
@@ -30,43 +35,49 @@ public class Calibration {
         task = new BukkitRunnable() {
             public void run() {
                 // If no longer normal state or no longer decoding
-                if (SurvivorManager.isSurvivor(player)) {
-                    if (SurvivorManager.getSurvivor(player).getState() != State.NORMAL) {
-                        finish();
-                        return;
-                    }
-                    if (SurvivorManager.getSurvivor(player).getAction() != type) {
-                        finish();
-                        new MissCalibration(plugin, player);
-                        return;
-                    }
-                }
+                player = getSurvivor().getPlayer();
 
-                progress += 2;
+                // Make sure not bot
+                if (player != null && getSurvivor().getState() != State.NORMAL) {
+                    finish();
+                    return;
+                }
+                if (player != null) Console.log(progress + " Checking :"+player.getDisplayName()+" action: "+getSurvivor().getAction());
+                else Console.log(progress + " Robot");
+
+                if (player != null && getSurvivor().getAction() != type) {
+                    finish();
+                    Console.log(player.getDisplayName() + " missed calib because not decoding/healing anymore: "+type);
+                    new MissCalibration(plugin, getSurvivor());
+                    return;
+                }
+                progress += 4;
                 if (progress > 100) {
                     finish();
-                    new MissCalibration(plugin, player);
+                    Console.log("Missed calib because reached limit");
+                    new MissCalibration(plugin, getSurvivor());
                 } else {
-                    player.setLevel(progress);
+                    if (player != null) player.setLevel(progress);
                 }
             }
         };
-        task.runTaskTimer(plugin, 0, 2); // 10 times per second
+        task.runTaskTimer(plugin, 0, 4); // 10 times per second
     }
 
     public void finish() {
-        player.setLevel(0);
+        if (player != null) player.setLevel(0);
         task.cancel();
-        CalibrationManager.removeAfterDelay(player);
+        CalibrationManager.removeAfterDelay(survivor);
     }
 
     public void hit() {
         //player.sendMessage("Hit calibration at: "+progress);
+        // Must be player to hit
         finish();
         if (progress / 10 == goal / 10) {
             player.sendMessage("Success!");
         } else {
-            new MissCalibration(plugin, player);
+            new MissCalibration(plugin, survivor);
         }
     }
 
@@ -85,5 +96,24 @@ public class Calibration {
 
     public int getType() {
         return type;
+    }
+
+    public Survivor getSurvivor() {
+        return survivor;
+    }
+
+    public void setSurvivor(Survivor s) {
+        CalibrationManager.replace(this.survivor, s);
+        Console.log("Changed survivor/player");
+        this.survivor = s;
+        this.player = s.getPlayer();
+    }
+
+    public void setBeingRemoved(boolean beingRemoved) {
+        this.beingRemoved = beingRemoved;
+    }
+
+    public boolean getBeingRemoved() {
+        return beingRemoved;
     }
 }

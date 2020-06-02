@@ -9,6 +9,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.ArrayList;
 
 /**
  * Cipher object (initiates automatically when first decoding)
@@ -20,6 +23,7 @@ public class Cipher {
     public IdentityV plugin;
     public Game game;
     public Location particlesLoc;
+    public ArrayList<Survivor> survivorsDecoding;
 
     public Cipher(IdentityV plugin, Location loc) {
         this.loc = loc;
@@ -28,6 +32,7 @@ public class Cipher {
         this.progress = 0;
         this.particlesLoc = new Location(loc.getWorld(), loc.getX(), loc.getY() + 1.1, loc.getZ());
         this.game = null; // Won't be able to open gates
+        survivorsDecoding = new ArrayList<Survivor>();
     }
 
     public Cipher(IdentityV plugin, Location loc, Game game) {
@@ -37,6 +42,7 @@ public class Cipher {
         this.progress = 0;
         this.particlesLoc = new Location(loc.getWorld(), loc.getX(), loc.getY() + 1.1, loc.getZ());
         this.game = game;
+        survivorsDecoding = new ArrayList<Survivor>();
     }
 
     public double getProgress() {
@@ -44,7 +50,7 @@ public class Cipher {
     }
 
     // Returns if done
-    public void decodeBit(int bit) {
+    public void incProgress(int bit) {
         Animations.random(particlesLoc,"animations.survivor","decode",1.5,3);
         progress += bit;
     }
@@ -71,5 +77,13 @@ public class Cipher {
         Block b = loc.getWorld().getBlockAt(loc.add(0,1,0));
         b.setType(Material.STAINED_GLASS);
         b.setData(DyeColor.BLACK.getData());
+    }
+
+    public ArrayList<Survivor> getSurvivorsDecoding() {
+        return survivorsDecoding;
+    }
+
+    public void addSurvivor(Survivor s) {
+        survivorsDecoding.add(s);
     }
 }

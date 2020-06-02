@@ -1,10 +1,10 @@
 package com.roland.identityv.enums;
 
 public class State {
-    public final static int NORMAL = 0;
-    public final static int INCAP = 1;
-    public final static int BALLOON = 2;
-    public final static int CHAIR = 3;
-    public final static int DEAD = 4;
-    public final static int ESCAPE = 5;
+    public static final int NORMAL = 0;
+    public static final int INCAP = 1;
+    public static final int BALLOON = 2;
+    public static final int CHAIR = 3;
+    public static final int DEAD = 4;
+    public static final int ESCAPE = 5;
 }

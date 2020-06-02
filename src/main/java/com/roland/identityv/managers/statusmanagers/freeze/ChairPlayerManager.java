@@ -6,8 +6,4 @@ public class ChairPlayerManager extends FreezeActionManager {
     public ChairPlayerManager(IdentityV plugin) {
         super(plugin);
     }
-
-//    public static boolean isDestroying(Player p) {
-//        return isDoingTask(p);
-//    }
 }

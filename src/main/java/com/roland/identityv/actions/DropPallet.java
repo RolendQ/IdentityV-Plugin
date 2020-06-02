@@ -1,7 +1,9 @@
 package com.roland.identityv.actions;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.FreezeHandler;
+import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StunRecoveryManager;
@@ -28,7 +30,7 @@ public class DropPallet {
      * @param plugin
      * @param block
      */
-    public DropPallet(IdentityV plugin, final Block block, final BlockFace otherFace) {
+    public DropPallet(IdentityV plugin, final Survivor survivor, final Block block, final BlockFace otherFace) {
         this.plugin = plugin;
 
         // TODO might make the survivor freeze and add animation
@@ -39,15 +41,6 @@ public class DropPallet {
                 block.setType(Material.STAINED_CLAY);
                 block.setData(DyeColor.GREEN.getData());
 
-//                BlockFace[] faces = {BlockFace.NORTH, BlockFace.WEST, BlockFace.EAST, BlockFace.SOUTH};
-//                for (BlockFace face : faces) {
-//                    Block b = block.getRelative(face);
-//                    if (b.getType() == Material.CARPET) {
-//                        b.setType(Material.STAINED_CLAY);
-//                        b.setData(DyeColor.GREEN.getData());
-//                        return;
-//                    }
-//                }
                 Block b = block.getRelative(otherFace);
                 b.setType(Material.STAINED_CLAY);
                 b.setData(DyeColor.GREEN.getData());
@@ -60,23 +53,24 @@ public class DropPallet {
                 for (Entity entity : block.getWorld().getNearbyEntities(block.getLocation(),20,20,20)) {
                     if (entity.getType() == EntityType.PLAYER) {
                         Player p = (Player) entity;
-                        if (!SurvivorManager.isSurvivor(p)) { // Hunter
+                        if (HunterManager.isHunter(p) && !p.hasLineOfSight(survivor.getPlayer())) { // Hunter
                             Holograms.alert(p,block.getLocation());
                         }
                     }
                 }
 
-                for (Entity entity : block.getWorld().getNearbyEntities(block.getLocation(),1.5,1.5,1.5)) {
+                for (Entity entity : block.getWorld().getNearbyEntities(block.getLocation(),Config.getInt("attributes.survivor","pallet_range"),2,Config.getInt("attributes.survivor","pallet_range"))) {
                     if (entity.getType() == EntityType.PLAYER) {
                         Player p = (Player) entity;
-                        if (!SurvivorManager.isSurvivor(p)) { // Hunter
-                            Animations.falling_rings(p.getLocation(),"animations.hunter","stun_recovery",Config.getInt("timers.hunter","pallet_stun"));
+                        if (HunterManager.isHunter(p)) { // Hunter
+                            p.getServer().broadcastMessage(survivor.getPlayer().getDisplayName() + " stunned the hunter with a pallet");
+                            Animations.falling_rings(p.getLocation().add(0,1,0),"animations.hunter","stun_recovery",Config.getInt("timers.hunter","pallet_stun"));
                             FreezeActionManager.getInstance().add(p, Config.getInt("timers.hunter","pallet_stun"));
                         }
                     }
                 }
                 cancel();
             }
-        }.runTaskLater(plugin,15);
+        }.runTaskLater(plugin,Config.getInt("timers.survivor","pallet_delay"));
     }
 }

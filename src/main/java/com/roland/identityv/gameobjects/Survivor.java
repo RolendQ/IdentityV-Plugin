@@ -4,21 +4,20 @@ import com.roland.identityv.actions.StruggleFree;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.items.Item;
 import com.roland.identityv.handlers.SitHandler;
-import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
-import com.roland.identityv.managers.gamecompmanagers.RocketChairManager;
-import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.managers.gamecompmanagers.*;
+import com.roland.identityv.managers.statusmanagers.CancelProtectionManager;
 import com.roland.identityv.managers.statusmanagers.freeze.AttackRecoveryManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StruggleRecoveryManager;
-import com.roland.identityv.utils.Animations;
-import com.roland.identityv.utils.Config;
-import com.roland.identityv.utils.Console;
-import com.roland.identityv.utils.ScoreboardUtil;
+import com.roland.identityv.utils.*;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,9 +32,7 @@ public class Survivor {
     public Game game;
 
     public Player player;
-    public Player hunter;
-//    public boolean isIncapacitated;
-//    public boolean isChaired;
+    public Hunter hunter; // for balloon
     public int state; // enum
     public int action; // enum
     public int struggleProgress;
@@ -45,15 +42,22 @@ public class Survivor {
     public int chairTimer;
     public int healingProgress;
     public int rescuingProgress;
+    public double cipherProgressAtStart;
+    public Survivor owner;
+    public Location cloneLoc;
 
     public long lastHeartbeat;
     public int selfHeal;
     public int crowsTimer;
 
+    public Survivor target; // for heal and rescue
+    public Item item;
     // Scoreboard
     public int line;
 
     public BukkitRunnable actionRunnable;
+
+    public ItemStack[] armor;
 
     // Maybe add character here
 
@@ -61,10 +65,21 @@ public class Survivor {
         this(plugin, player, null); // Won't be able to open gates
     }
 
+    public Survivor(IdentityV plugin, Survivor owner, Location cloneLoc, Game game) {
+        // Bot
+        this.plugin = plugin;
+        this.game = game;
+        this.player = null; // Make sure stuff checks for this
+
+        this.owner = owner;
+        this.cloneLoc = cloneLoc;
+    }
+
     public Survivor(IdentityV plugin, Player player, Game game) {
         this.plugin = plugin;
         this.player = player;
         this.game = game;
+        this.target = null;
 
         actionRunnable = null;
         state = State.NORMAL;
@@ -74,6 +89,7 @@ public class Survivor {
         player.setHealthScale(4);
         player.setFoodLevel(2);
         player.setSaturation(1000);
+        player.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
 
         lastHeartbeat = 0;
         struggleProgress = 0;
@@ -85,6 +101,17 @@ public class Survivor {
         line = (SurvivorManager.getSurvivors().size()*2) + 2; // Line for their name
 //        ScoreboardUtil.set("&a"+player.getDisplayName(), getNameLine());
 //        ScoreboardUtil.setBar(1,"a",getBarLine());
+
+        armor = player.getInventory().getArmorContents();
+    }
+
+    public ItemStack[] getArmor() {
+        return armor;
+    }
+
+    // Only for bots
+    public Survivor getOwner() {
+        return owner;
     }
 
     public int getNameLine() {
@@ -100,25 +127,28 @@ public class Survivor {
     }
 
     public void struggle() {
+        Player hunterP = hunter.getPlayer();
+        if (hunter == null) return;
+
         struggleProgress += 1;
         player.setExp((float) struggleProgress / (float) Config.getInt("timers.survivor","struggle"));
 
         if (struggleProgress % Config.getInt("timers.survivor","struggle_tilt_interval") == 0) { // Make player tilt
-            Console.log("Tilting "+hunter.getDisplayName()+": "+hunter.getLocation().getYaw());
+            Console.log("Tilting "+hunterP.getDisplayName()+": "+hunterP.getLocation().getYaw());
 
 
-            Location newYaw = hunter.getLocation().clone();
+            Location newYaw = hunterP.getLocation().clone();
             Random r = new Random();
             int chance = r.nextInt(2);
             int angle = Config.getInt("attributes.hunter","struggle_tilt_angle");
             if (chance == 0) newYaw.setYaw(newYaw.getYaw() + 60);
             else newYaw.setYaw(newYaw.getYaw() - 60);
 
-            hunter.eject(); // temporarily so they can teleport
-            hunter.teleport(newYaw);
+            hunterP.eject(); // temporarily so they can teleport
+            hunterP.teleport(newYaw);
         }
         if (player.getExp() == 1) {
-            new StruggleFree(plugin,hunter,player);
+            new StruggleFree(plugin,hunter,this);
             struggleProgress = 0;
             player.setExp(0);
             hunter = null;
@@ -135,9 +165,9 @@ public class Survivor {
         SitHandler.unsit(player);
     }
 
-    public Player getHunter() { return hunter; }
+    public Hunter getHunter() { return hunter; }
 
-    public void setHunter(Player hunter) { this.hunter = hunter; }
+    public void setHunter(Hunter hunter) { this.hunter = hunter; }
 
     public void incCrowsTimer() {
         crowsTimer++;
@@ -151,10 +181,8 @@ public class Survivor {
         crowsTimer = 0;
     }
     public boolean isVisibleToAHunter() {
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
-            if (!SurvivorManager.isSurvivor(p)) {
-                if (p.hasLineOfSight(player)) return true;
-            }
+        for (Hunter h : HunterManager.getHunters()) {
+            if (h.getPlayer().hasLineOfSight(player)) return true;
         }
         return false;
     }
@@ -193,7 +221,11 @@ public class Survivor {
 
     public int getAction() { return action; }
 
-    public void setAction(int action) { this.action = action;}
+    public void setAction(int action) {
+        this.action = action;
+        // Cancel Protection
+        CancelProtectionManager.getInstance().add(player,10);
+    }
 
     public long getLastHeartbeat() {
         return lastHeartbeat;
@@ -222,6 +254,7 @@ public class Survivor {
             player.setGameMode(GameMode.SPECTATOR);
             Animations.one(player.getLocation(),"animations.survivor","death",12);
             plugin.getServer().broadcastMessage(player.getDisplayName() + " died");
+            SurvivorManager.checkIfOver();
         }
     }
 
@@ -233,15 +266,19 @@ public class Survivor {
         return healingProgress;
     }
 
-    public void incHealingProgress() {
-        healingProgress += 1;
-        Animations.random(player.getLocation(),"animations.survivor","heal",1.5,3);
+    public void incHealingProgress(int amount) {
+        incHealingProgress(amount, false);
+    }
+
+    public void incHealingProgress(int amount, boolean animate) {
+        healingProgress += amount;
+        if (animate) Animations.random(player.getLocation(),"animations.survivor","heal",1.5,3);
     }
 
     public int getRescuingProgress() { return rescuingProgress; }
 
-    public void incRescuingProgress() {
-        rescuingProgress += 1;
+    public void incRescuingProgress(int amount) {
+        rescuingProgress += amount;
         Animations.ring(player.getLocation(),"animations.survivor","rescue",2);
     }
 
@@ -264,7 +301,7 @@ public class Survivor {
         player.damage(damage);
 
         // Speed boost
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Config.getInt("attributes.survivor","hit_boost_length"), 1, true),true);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Config.getInt("attributes.survivor","hit_boost_length"), 1, true, false),true);
     }
 
     public void startSelfHeal() {
@@ -278,31 +315,20 @@ public class Survivor {
                     return;
                 }
 
-                // Check if they can self heal and past limit
+                // [INCAP] Check if they can self heal and past limit
                 if (getState() == State.INCAP && healingProgress >= Config.getInt("timers.survivor","self_heal_limit") && selfHeal == 0) {
                     player.sendMessage("Cannot progress anymore due to self heal limit");
                     clearActionRunnable();
                     return;
                 }
 
-                incHealingProgress();
+                incHealingProgress(10);
 
 
-                // Heal (syringe) TODO
-                if (getState() == State.NORMAL) {
-                    player.setExp((float) healingProgress / (float) Config.getInt("timers.survivor","heal"));
-                    if (player.getExp() == 1) { // Finished healing
-                        player.setHealth(getPlayer().getHealth() + 2);
-                        setHealingProgress(0);
-                        player.sendMessage("You have healed yourself");
-                        clearActionRunnable();
-                    }
-                    return;
-                }
                 // Self revive
                 if (getState() == State.INCAP) {
                     player.setExp((float) healingProgress / (float) Config.getInt("timers.survivor","revive"));
-                    if (player.getExp() == 1) { // Finished reviving
+                    if (player.getExp() >= 1) { // Finished reviving
                         selfHeal -= 1;
                         player.setHealth(2);
                         player.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
@@ -318,26 +344,89 @@ public class Survivor {
         actionRunnable.runTaskTimer(plugin, 5, 15); // slower
     }
 
+    public void startCloneHeal(final Survivor clone, final Survivor injured) {
+        Console.log("Detected clone heal");
+        setAction(Action.HEAL);
+        clone.setAction(Action.GETHEAL); // Can't be injured because they are using bot
+
+        target = clone; // ?
+
+        final double progressAtStart = injured.getHealingProgress(); // May need to adjust this later
+
+        actionRunnable = new BukkitRunnable() {
+            public void run() {
+                if (clone.getAction() != Action.GETHEAL) { // Player cleared it when switched back
+                    if (CalibrationManager.hasCalibration(Survivor.this)) {
+                        CalibrationManager.get(Survivor.this).finish();
+                    }
+                    clearActionRunnable();
+                    return;
+                }
+
+                clone.incHealingProgress(10, false); // Cancel particle effects
+                Animations.random(clone.getLocation(),"animations.survivor","heal",1.5,3);
+
+                // Calib
+                if (clone.getHealingProgress() - progressAtStart > 40) { // Window for calibration
+                    Random r = new Random();
+                    if (r.nextInt(4) == 0) {
+                        if (!CalibrationManager.hasCalibration(Survivor.this)) CalibrationManager.give(Survivor.this,Action.HEAL);
+                    }
+                }
+
+                // Heal
+                if (clone.getState() == State.NORMAL) {
+                    player.setExp((float) clone.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
+
+                    // Don't change exp of player
+                    //injured.getPlayer().setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
+                    if (player.getExp() >= 1) { // Finished healing
+                        if (CalibrationManager.hasCalibration(Survivor.this)) {
+                            CalibrationManager.get(Survivor.this).finish();
+                        }
+
+                        injured.getPlayer().setHealth(injured.getPlayer().getHealth() + 2);
+                        clone.setHealingProgress(0);
+                        //injured.getPlayer().sendMessage("You have been healed");
+                        clone.clearActionRunnable();
+                        clearActionRunnable();
+                    }
+                    return;
+                }
+            }
+        };
+        actionRunnable.runTaskTimer(plugin, 5, 10);
+    }
+
+    private Location getLocation() {
+        return cloneLoc;
+    }
+
     public void startHeal(final Survivor injured) {
         Console.log("Starting heal of "+injured.getPlayer().getDisplayName());
         setAction(Action.HEAL);
         injured.setAction(Action.GETHEAL);
+
+        target = injured;
 
         final double progressAtStart = injured.getHealingProgress();
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
                 if (injured.getAction() != Action.GETHEAL) { // Player cleared it
+                    if (CalibrationManager.hasCalibration(Survivor.this)) {
+                        CalibrationManager.get(Survivor.this).finish();
+                    }
                     clearActionRunnable();
                     return;
                 }
-                injured.incHealingProgress();
+                injured.incHealingProgress(10);
 
                 // Calib
-                if (injured.getHealingProgress() - progressAtStart > 4) { // Window for calibration
+                if (injured.getHealingProgress() - progressAtStart > 40) { // Window for calibration
                     Random r = new Random();
                     if (r.nextInt(4) == 0) {
-                        if (!CalibrationManager.hasCalibration(player)) CalibrationManager.give(player, Action.HEAL);
+                        if (!CalibrationManager.hasCalibration(Survivor.this)) CalibrationManager.give(Survivor.this,Action.HEAL);
                     }
                 }
 
@@ -345,9 +434,9 @@ public class Survivor {
                 if (injured.getState() == State.NORMAL) {
                     player.setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
                     injured.getPlayer().setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","heal"));
-                    if (player.getExp() == 1) { // Finished healing
-                        if (CalibrationManager.hasCalibration(player)) {
-                            CalibrationManager.get(player).finish();
+                    if (player.getExp() >= 1) { // Finished healing
+                        if (CalibrationManager.hasCalibration(Survivor.this)) {
+                            CalibrationManager.get(Survivor.this).finish();
                         }
 
                         injured.getPlayer().setHealth(injured.getPlayer().getHealth() + 2);
@@ -362,9 +451,9 @@ public class Survivor {
                 if (injured.getState() == State.INCAP) {
                     player.setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","revive"));
                     injured.getPlayer().setExp((float) injured.getHealingProgress() / (float) Config.getInt("timers.survivor","revive"));
-                    if (player.getExp() == 1) { // Finished reviving
-                        if (CalibrationManager.hasCalibration(player)) {
-                            CalibrationManager.get(player).finish();
+                    if (player.getExp() >= 1) { // Finished reviving
+                        if (CalibrationManager.hasCalibration(Survivor.this)) {
+                            CalibrationManager.get(Survivor.this).finish();
                         }
 
                         injured.getPlayer().setHealth(2);
@@ -385,18 +474,21 @@ public class Survivor {
     public void startRescue(final Survivor chaired) {
         setAction(Action.RESCUE);
         chaired.setRescuingProgress(0); // Reset rescuing progress
-        //injured.setAction(Action.GETHEAL);
+        chaired.setAction(Action.GETRESCUE);
+
+        target = chaired;
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
-                chaired.incRescuingProgress();
+                chaired.incRescuingProgress(1);
 
                 player.setExp((float) chaired.getRescuingProgress() / (float) Config.getInt("timers.survivor","rescue"));
                 chaired.getPlayer().setExp((float) chaired.getRescuingProgress() / (float) Config.getInt("timers.survivor","rescue"));
 
-                if (player.getExp() == 1) { // Finished rescuing
+                if (player.getExp() >= 1) { // Finished rescuing
                     RocketChairManager.getChair(chaired.getPlayer()).releaseSurvivor();
                     SitHandler.unsit(chaired.getPlayer());
+                    chaired.setAction(Action.NONE);
                     chaired.getPlayer().setHealth(2);
                     chaired.getPlayer().setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
                     chaired.setRescuingProgress(0);
@@ -410,31 +502,46 @@ public class Survivor {
         actionRunnable.runTaskTimer(plugin, 5, 5);
     }
 
+    // Non bot
     public void startDecode(final Cipher cipher) {
+        startDecode(cipher, cipher.getProgress());
+    }
+
+    // Bot
+    public void startDecode(final Cipher cipher, double progressAtStart) {
         setAction(Action.DECODE);
         Console.log("Start decode");
-        final double progressAtStart = cipher.getProgress();
+        //final double progressAtStart = cipher.getProgress();
+        cipherProgressAtStart = progressAtStart;
+        if (!cipher.getSurvivorsDecoding().contains(this)) { // Register as a decoding survivor
+            cipher.addSurvivor(this);
+        }
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
                 // If 5 ciphers are done
                 if (game.getCiphersDone() == 5) {
                     clearActionRunnable();
+                    if (CalibrationManager.hasCalibration(Survivor.this)) {
+                        CalibrationManager.get(Survivor.this).finish();
+                    }
                 }
-                cipher.decodeBit(1);
-                if (cipher.getProgress() - progressAtStart > 4) { // Window for calibration
+
+                // Progress depends on number of decoders
+                cipher.incProgress(Adjustments.getDecodeRate(cipher.getSurvivorsDecoding().size()));
+
+                if (cipher.getProgress() - cipherProgressAtStart > 40) { // Window for calibration
                     Random r = new Random();
                     if (r.nextInt(6) == 0) {
-                        if (!CalibrationManager.hasCalibration(player)) CalibrationManager.give(player, Action.DECODE);
+                        if (!CalibrationManager.hasCalibration(Survivor.this)) CalibrationManager.give(Survivor.this, Action.DECODE);
                     }
                 }
                 player.setExp((float) cipher.getProgress() / (float) Config.getInt("timers.survivor","decode"));
-                Console.log("exp: "+player.getExp());
-                if (player.getExp() == 1) {
+                if (player.getExp() >= 1) {
                     cipher.pop();
                     player.sendMessage("You have finished this cipher");
-                    if (CalibrationManager.hasCalibration(player)) {
-                        CalibrationManager.get(player).finish();
+                    if (CalibrationManager.hasCalibration(Survivor.this)) {
+                        CalibrationManager.get(Survivor.this).finish();
                     }
                     clearActionRunnable();
                 }
@@ -446,14 +553,15 @@ public class Survivor {
     public void startOpen(final Gate gate) {
         if (game != null && game.getCiphersDone() < 5) return; // need to do 5 ciphers
 
-        setAction(Action.DECODE); // same as ciphers
+        setAction(Action.OPEN);
         Console.log("Start open gate");
+        gate.setOpener(this);
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
-                gate.openBit(1);
+                gate.incProgress(10);
                 player.setExp((float) gate.getProgress() / (float) Config.getInt("timers.survivor","open_gate"));
-                if (player.getExp() == 1) {
+                if (player.getExp() >= 1) {
                     gate.open();
                     player.sendMessage("You have opened the gate");
                     clearActionRunnable();
@@ -471,19 +579,65 @@ public class Survivor {
         this.healingProgress = healingProgress;
     }
 
+    public BukkitRunnable getActionRunnable() {
+        return actionRunnable;
+    }
+    public void setActionRunnable(BukkitRunnable actionRunnable) {
+        this.actionRunnable = actionRunnable;
+    }
+
     public boolean clearActionRunnable() {
+        return clearActionRunnable(false);
+    }
+
+    public boolean clearActionRunnable(boolean isBotSwitch) {
         player.setExp(0);
         setAction(Action.NONE);
+        if (!isBotSwitch && target != null) { // So switching from bot doesn't stop heal
+            target.clearActionRunnable();
+            target = null;
+        }
         if (actionRunnable != null) {
             actionRunnable.cancel();
             actionRunnable = null;
             return true;
         }
+        // Clear from decoding any ciphers
+        CipherManager.removeDecodingSurvivor(this);
+        GateManager.removeOpeningSurvivor(this);
         return false;
     }
 
     public int getSelfHeal() {
         return selfHeal;
+    }
+
+    public void escape() {
+        state = State.ESCAPE;
+        player.setGameMode(GameMode.SPECTATOR);
+        //Animations.one(player.getLocation(),"animations.survivor","escape",12);
+        plugin.getServer().broadcastMessage(player.getDisplayName() + " escaped");
+        SurvivorManager.checkIfOver();
+    }
+
+    public Survivor getTarget() {
+        return target;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public void setCipherProgressAtStart(double cipherProgressAtStart) {
+        this.cipherProgressAtStart = cipherProgressAtStart;
+    }
+
+    public double getCipherProgressAtStart() {
+        return cipherProgressAtStart;
     }
 }
 

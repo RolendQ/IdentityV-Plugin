@@ -1,12 +1,14 @@
 package com.roland.identityv.enums;
 
 public class Action {
-    public final static int NONE = 0;
-    public final static int DECODE = 1;
-    public final static int HEAL = 2;
-    public final static int GETHEAL = 3;
-    public final static int RESCUE = 4;
-    public final static int VAULT = 5;
-    public final static int SELFHEAL = 6;
+    public static final int NONE = 0;
+    public static final int DECODE = 1;
+    public static final int HEAL = 2;
+    public static final int GETHEAL = 3;
+    public static final int RESCUE = 4;
+    public static final int VAULT = 5;
+    public static final int SELFHEAL = 6;
+    public static final int GETRESCUE = 7;
+    public static final int OPEN = 8;
     // dismantling, rescuing, opening gate
 }

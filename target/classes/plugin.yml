@@ -29,3 +29,9 @@ commands:
     description: Test scoreboard
   calib:
     description: Test calibration
+  debug:
+    description: Test situations for bugs
+  map:
+    description: Setup and refresh the map
+  hunter:
+    description: Edit hunters

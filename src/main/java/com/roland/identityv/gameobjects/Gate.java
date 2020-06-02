@@ -18,12 +18,14 @@ public class Gate {
     public Location loc; // points to keypad (tripwire hook)
     public int progress;
     public IdentityV plugin;
+    public Survivor opener; // Only one player can open it at a time
     // Game?
 
     public Gate(IdentityV plugin, Location loc) {
         this.loc = loc;
         this.plugin = plugin;
         this.progress = 0;
+        this.opener = null;
     }
 
     public double getProgress() {
@@ -31,7 +33,7 @@ public class Gate {
     }
 
     // Returns if done
-    public void openBit(int bit) {
+    public void incProgress(int bit) {
         Animations.random(loc,"animations.survivor","decode",1.5,3);
         progress += bit;
     }
@@ -65,4 +67,11 @@ public class Gate {
         }
     }
 
+    public void setOpener(Survivor opener) {
+        this.opener = opener;
+    }
+
+    public Survivor getOpener() {
+        return opener;
+    }
 }

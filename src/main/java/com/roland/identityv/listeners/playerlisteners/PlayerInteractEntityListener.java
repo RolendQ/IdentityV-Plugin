@@ -5,9 +5,13 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.gameobjects.items.Controller;
 import com.roland.identityv.handlers.FreezeHandler;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
+import com.roland.identityv.managers.gamecompmanagers.HunterManager;
+import com.roland.identityv.managers.gamecompmanagers.ItemManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.utils.Console;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -30,11 +34,45 @@ public class PlayerInteractEntityListener implements Listener {
     public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
         if (e.getRightClicked() == null) return;
 
+
+        Console.log("Detected right click: "+e.getRightClicked().getName() + " " + e.getRightClicked().getEntityId() + " "+e.getRightClicked().toString());
+
         if (FreezeHandler.isFrozen(e.getPlayer())) { // Return if they are frozen
             return;
         }
 
         Player p = e.getPlayer();
+
+        // USE ITEM FIRST
+        if (SurvivorManager.isSurvivor(p) && p.getItemInHand() != null) {
+            if (ItemManager.isItem(p.getItemInHand().getType())) {
+                ItemManager.useItem(p.getItemInHand().getType(), SurvivorManager.getSurvivor(p));
+                return;
+            }
+        }
+
+        if (e.getRightClicked().getType() == EntityType.VILLAGER) { // Cancel any villager interaction
+            e.setCancelled(true);
+
+            Controller c = Controller.getController(e.getRightClicked().getEntityId());
+            Survivor s = c.getSurvivor();
+            Survivor robotPlaceholder = c.getRobotPlaceholder();
+
+            if (s != null) {
+                Console.log("Found owner of robot: "+s.getPlayer().getDisplayName());
+
+                Survivor clickerS = SurvivorManager.getSurvivor(p);
+
+                // HEAL
+                if (clickerS.getState() == State.NORMAL ||
+                        clickerS.getState() == State.INCAP) {
+                    if (s.getPlayer().getHealth() < 4) { // TODO this needs fixing because health is bot's
+                        clickerS.startCloneHeal(robotPlaceholder,s); // Stops self healing automatically
+                    }
+                    return;
+                }
+            }
+        }
 
         if (e.getRightClicked().getType() == EntityType.PLAYER) {
 
@@ -42,33 +80,26 @@ public class PlayerInteractEntityListener implements Listener {
 
             if (!SurvivorManager.isSurvivor(clickedP)) return;
 
-            // HUNTER BALLOON
-            if (!SurvivorManager.isSurvivor(e.getPlayer())) {
-                if (SurvivorManager.getSurvivor(clickedP).getState() == State.INCAP && clickedP.getVehicle() == null) {
-                    new BalloonPlayer(plugin, p, clickedP);
+            Survivor s = SurvivorManager.getSurvivor(clickedP);
+
+            // HUNTER
+            if (HunterManager.isHunter(e.getPlayer())) {
+                // BALLOON
+                if (s.getState() == State.INCAP && clickedP.getVehicle() == null) {
+                    new BalloonPlayer(plugin, HunterManager.getHunter(p), s);
                 }
             // SURVIVOR
             } else {
-                // HEAL CALIBRATION
-                if (SurvivorManager.getSurvivor(p).getAction() == Action.HEAL) {
-                    if (CalibrationManager.hasCalibration(p) && CalibrationManager.get(p).getType() == com.roland.identityv.enums.Action.HEAL) {
-                        CalibrationManager.get(p).hit();
-                    }
-                    return;
-                }
+                Survivor clickerS = SurvivorManager.getSurvivor(p);
 
                 // HEAL
-                if (SurvivorManager.getSurvivor(clickedP).getState() == State.NORMAL ||
-                        SurvivorManager.getSurvivor(clickedP).getState() == State.INCAP) {
+                if (clickerS.getState() == State.NORMAL ||
+                        clickerS.getState() == State.INCAP) {
                     if (clickedP.getHealth() < 4) {
-                        SurvivorManager.getSurvivor(e.getPlayer()).startHeal(SurvivorManager.getSurvivor(clickedP));
+                        clickerS.startHeal(s); // Stops self healing automatically
                     }
                     return;
                 }
-//                // RESCUE
-//                if (SurvivorManager.getSurvivor(clickedP).getState() == State.CHAIR) {
-//                    SurvivorManager.getSurvivor(e.getPlayer()).startRescue(SurvivorManager.getSurvivor(clickedP));
-//                }
             }
         }
 

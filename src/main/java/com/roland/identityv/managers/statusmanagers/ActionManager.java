@@ -28,6 +28,11 @@ public abstract class ActionManager {
     public HashMap<Player, BukkitRunnable> tasks;
 
     public void add(final Player p, long time) {
+        // Remove existing
+        if (tasks.containsKey(p)) {
+            tasks.get(p).cancel();
+        }
+
         //recoveryTimes.put(p, time);
         tasks.put(p, new BukkitRunnable() {
             public void run() {

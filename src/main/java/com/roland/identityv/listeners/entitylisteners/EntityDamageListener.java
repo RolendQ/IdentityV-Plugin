@@ -48,7 +48,7 @@ public class EntityDamageListener implements Listener {
         Player p = (Player) e.getEntity();
 
         // Cancel if they are incapacitated, ballooned, chaired
-        if (SurvivorManager.getSurvivor(p).getState() != State.NORMAL) {
+        if (SurvivorManager.getSurvivor(p) != null && SurvivorManager.getSurvivor(p).getState() != State.NORMAL) {
             e.setCancelled(true);
             return;
         }

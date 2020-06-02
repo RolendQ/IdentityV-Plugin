@@ -1,6 +1,7 @@
 package com.roland.identityv.actions;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.managers.statusmanagers.freeze.DestroyPalletManager;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
@@ -18,15 +19,16 @@ public class DestroyPallet {
      * Initiates the action when a hunter destroys a pallet
      * @param plugin
      * @param block
-     * @param p
+     * @param hunter
      */
-    public DestroyPallet(IdentityV plugin, final Block block, final Player p) {
+    public DestroyPallet(IdentityV plugin, final Block block, final Hunter hunter) {
         this.plugin = plugin;
+        final Player hunterP = hunter.getPlayer();
 
         int destroyPalletTimer = Config.getInt("timers.hunter","destroy_pallet");
-        DestroyPalletManager.getInstance().add(p, destroyPalletTimer);
+        DestroyPalletManager.getInstance().add(hunterP, destroyPalletTimer);
 
-        Animations.decreasing_ring(p.getLocation(),"animations.hunter","destroy_pallet",2.5, destroyPalletTimer);
+        Animations.decreasing_ring(hunterP.getLocation(),"animations.hunter","destroy_pallet",2.5, destroyPalletTimer);
 
         new BukkitRunnable() {
             public void run() {

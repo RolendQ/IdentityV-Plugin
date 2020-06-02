@@ -2,6 +2,7 @@ package com.roland.identityv.actions;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.gameobjects.RocketChair;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.SitHandler;
@@ -22,20 +23,22 @@ public class ChairPlayer {
      * @param survivor
      * @param chair
      */
-    public ChairPlayer(final IdentityV plugin, final Player hunter, final Player survivor, final RocketChair chair) {
+    public ChairPlayer(final IdentityV plugin, final Hunter hunter, final Survivor survivor, final RocketChair chair) {
         this.plugin = plugin;
+        final Player hunterP = hunter.getPlayer();
+        final Player survivorP = survivor.getPlayer();
 
         int chairPlayerTimer = Config.getInt("timers.hunter","chair_survivor");
 
-        ChairPlayerManager.getInstance().add(hunter, chairPlayerTimer);
+        ChairPlayerManager.getInstance().add(hunterP, chairPlayerTimer);
 
-        Animations.decreasing_ring(hunter.getLocation(),"animations.hunter","chair",2.5,chairPlayerTimer);
+        Animations.decreasing_ring(hunterP.getLocation(),"animations.hunter","chair",2.5,chairPlayerTimer);
 
         new BukkitRunnable() {
             public void run() {
-                SitHandler.unsit(survivor);
-                chair.setSurvivor(survivor);
-                Survivor s = SurvivorManager.getSurvivor(survivor);
+                SitHandler.unsit(survivorP);
+                chair.setSurvivor(survivorP);
+                Survivor s = SurvivorManager.getSurvivor(survivorP);
                 s.incTimesOnChair(); // adds 1
                 if (s.getTimesOnChair() == 3) { // Dead on chair
                     chair.fly();
@@ -44,7 +47,7 @@ public class ChairPlayer {
                     return;
                 }
                 s.setState(State.CHAIR);
-                plugin.getServer().broadcastMessage(survivor.getName() + " was chaired");
+                plugin.getServer().broadcastMessage(survivorP.getName() + " was chaired");
                 cancel();
             }
         }.runTaskLater(plugin,chairPlayerTimer);

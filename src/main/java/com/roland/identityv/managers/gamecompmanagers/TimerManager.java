@@ -3,6 +3,7 @@ package com.roland.identityv.managers.gamecompmanagers;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
@@ -31,7 +32,7 @@ public class TimerManager {
                 for (Survivor s : SurvivorManager.getSurvivors()) {
                     if (s.getState() == State.NORMAL) {
                         // Reset crows
-                        if (s.getState() != State.NORMAL ||
+                        if (HunterManager.getHunters().size() == 0 || s.getState() != State.NORMAL ||
                                 s.getAction() == Action.DECODE || s.getAction() == Action.HEAL || s.getAction() == Action.RESCUE ||
                                 s.isVisibleToAHunter()) {
                             s.clearCrowsTimer();
@@ -43,10 +44,8 @@ public class TimerManager {
                             Animations.random(s.getPlayer().getLocation().add(0, 2, 0),"animations.survivor","crows",1, 4);
                             // Alert hunter
                             if (s.getCrowsTimer() % 16 == 0) {
-                                for (Player p : plugin.getServer().getOnlinePlayers()) {
-                                    if (!SurvivorManager.isSurvivor(p)) { // Hunter
-                                        Holograms.alert(p, s.getPlayer().getLocation());
-                                    }
+                                for (Hunter h : HunterManager.getHunters()) {
+                                    Holograms.alert(h.getPlayer(), s.getPlayer().getLocation());
                                 }
                             }
                         }

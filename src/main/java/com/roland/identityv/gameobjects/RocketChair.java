@@ -29,7 +29,8 @@ public class RocketChair {
     public void setSurvivor(Player survivor) {
         this.survivor = survivor;
         Console.log("Set survivor: "+survivor.getName());
-        SitHandler.sit(survivor,loc.clone().add(loc.getX() < 0 ? 0.5 : -0.5, 1, loc.getZ() > 0 ? 0.5 : -0.5));
+        SitHandler.sit(survivor,loc.add(0.5, 1, 0.5));
+        Console.log("Sitting on chair");
     }
 
     public void releaseSurvivor() {

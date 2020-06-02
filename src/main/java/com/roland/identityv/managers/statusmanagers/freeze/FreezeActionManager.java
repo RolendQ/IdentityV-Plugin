@@ -29,6 +29,11 @@ public abstract class FreezeActionManager { // used to extend ActionManager
     }
 
     public void add(final Player p, long time) {
+        // Remove existing
+        if (tasks.containsKey(p)) {
+            tasks.get(p).cancel();
+        }
+
         FreezeHandler.freeze(p);
         XPBar.decreasing(p,time);
         tasks.put(p, new BukkitRunnable() {

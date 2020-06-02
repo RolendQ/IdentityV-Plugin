@@ -2,6 +2,7 @@ package com.roland.identityv.commands.player;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
@@ -36,15 +37,19 @@ public class EditSurvivorCommand extends PlayerCommand {
             }
 
             if (args[0].equalsIgnoreCase("add")) {
-                if (SurvivorManager.isSurvivor(p)) return true;
+                Player target = p.getServer().getPlayer(args[1]);
+                if (SurvivorManager.isSurvivor(target)) return true;
 
-                SurvivorManager.addSurvivor(p.getServer().getPlayer(args[1]));
-                //p.sendMessage("Added (" + SurvivorManager.getSurvivor(p).getNameLine() + ") : "+args[1]);
+                if (HunterManager.isHunter(target)) HunterManager.removeHunter(target);
+
+                SurvivorManager.addSurvivor(target);
+                p.sendMessage("Added: "+args[1]);
                 return true;
             }
 
             if (args[0].equalsIgnoreCase("remove")) {
                 SurvivorManager.removeSurvivor(p.getServer().getPlayer(args[1]));
+
                 p.sendMessage("Removed: "+args[1]);
                 return true;
             }

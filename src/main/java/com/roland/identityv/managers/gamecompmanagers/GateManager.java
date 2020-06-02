@@ -1,8 +1,10 @@
 package com.roland.identityv.managers.gamecompmanagers;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.Gate;
 import com.roland.identityv.gameobjects.RocketChair;
+import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Console;
 import org.bukkit.Location;
 
@@ -33,5 +35,22 @@ public class GateManager {
         Gate newGate = new Gate(plugin,loc);
         gates.add(newGate);
         return newGate;
+    }
+
+    public static void removeOpeningSurvivor(Survivor survivor) {
+        for (Gate g : gates) {
+            if (g.getOpener() == survivor) {
+                g.setOpener(null);
+            }
+        }
+    }
+
+    public static Gate getGateFromSurvivor(Survivor survivor) {
+        for (Gate g : gates) {
+            if (g.getOpener() == survivor) {
+                return g;
+            }
+        }
+        return null;
     }
 }

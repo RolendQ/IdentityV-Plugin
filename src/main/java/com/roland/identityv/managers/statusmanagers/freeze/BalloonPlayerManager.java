@@ -7,8 +7,4 @@ public class BalloonPlayerManager extends FreezeActionManager {
     public BalloonPlayerManager(IdentityV plugin) {
         super(plugin);
     }
-
-//    public static boolean isDestroying(Player p) {
-//        return isDoingTask(p);
-//    }
 }

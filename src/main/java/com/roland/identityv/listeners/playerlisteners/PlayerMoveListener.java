@@ -5,7 +5,9 @@ import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.handlers.FreezeHandler;
+import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
+import com.roland.identityv.managers.statusmanagers.CancelProtectionManager;
 import com.roland.identityv.managers.statusmanagers.SwingManager;
 import com.roland.identityv.managers.statusmanagers.freeze.AttackRecoveryManager;
 import com.roland.identityv.utils.Config;
@@ -47,49 +49,27 @@ public class PlayerMoveListener implements Listener {
 
         Block blockBelow = p.getLocation().getBlock().getRelative(BlockFace.DOWN);
 
-//        if (blockBelow.getType() == Material.STAINED_CLAY) {
-//            if (SurvivorManager.isSurvivor(p) && blockBelow.getData() != DyeColor.RED.getData()) {
-//                if (SurvivorManager.getSurvivor(p).getState() == State.NORMAL) {
-//                    // Must be survivor and normal state to vault
-//                    p.removePotionEffect(PotionEffectType.JUMP);
-//                    p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20, 0), true);
-//                }
-//            } else if (blockBelow.getData() == DyeColor.BLUE.getData()) {
-//                p.removePotionEffect(PotionEffectType.JUMP);
-//                p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20, 0), true);
-//            }
-//        }
-//        else p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,99999,250),true);
         if (p.getGameMode() == GameMode.SURVIVAL) p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,99999,250),true);
         else p.removePotionEffect(PotionEffectType.JUMP);
 
         if (SurvivorManager.isSurvivor(p)) {
+            // Survivor
             Survivor s = SurvivorManager.getSurvivor(p);
-            if (s.getState() != State.NORMAL && s.getState() != State.INCAP && s.getAction() != Action.VAULT) return; // make sure not balloon or chair
+            if (s.getState() != State.NORMAL && s.getState() != State.INCAP) return; // make sure not balloon or chair, dead or free
 
-            s.setAction(Action.NONE); // Resets any healing/rescuing
-            if (s.clearActionRunnable()) {
-                p.sendMessage("Cancelled");
+            // Check if escaped
+            if (blockBelow.getType() == Material.SEA_LANTERN) {
+                s.escape();
             }
-//            } else {
-//                if (s.getAction() != Action.VAULT && blockBelow.getType() == Material.STAINED_CLAY) { // must be clay
-//                    Console.log("Detected jump");
-//                    p.sendMessage("You are vaulting");
-//                    s.setAction(Action.VAULT);
-//
-//                    // Sound
-//                    for (Entity entity : p.getWorld().getNearbyEntities(p.getLocation(),20,20,20)) {
-//                        if (entity.getType() == EntityType.PLAYER) {
-//                            Player p2 = (Player) entity;
-//                            if (!SurvivorManager.isSurvivor(p)) { // Hunter
-//                                Holograms.alert(p2,p.getLocation());
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-        } else {
-            // Falling
+
+            if (!CancelProtectionManager.getInstance().isDoingTask(p)) { // Brief period where they can't cancel
+                s.setAction(Action.NONE); // Resets any healing/rescuing
+                if (s.clearActionRunnable()) {
+                    p.sendMessage("Cancelled");
+                }
+            }
+        } else if (HunterManager.isHunter(p)) {
+            // Hunter Falling
             if (p.getFallDistance() > Config.getDouble("attributes.hunter","fall_distance_reset")) {
                 //p.sendMessage("Detected fall");
                 if (SwingManager.getInstance().isDoingTask(p)) {

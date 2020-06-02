@@ -16,14 +16,17 @@ animations:
     incap: lavadrip
     death: potion_break
     crows: smoke
+    miss_calibration: potion_break
   hunter:
     preswing: fireworks_spark
     swing: potion_break
     hit: magic_crit
-    balloon: coloured_dust
-    stun_recovery: splash
+    balloon: splash
+    stun_recovery: coloured_dust
     chair: spell
     destroy_pallet: spell
+  item:
+    perfume_use: potion_break
 timers:
   survivor:
     chair: 240
@@ -31,13 +34,15 @@ timers:
     struggle_limit: 10
     struggle_tilt_interval: 7
     struggle: 30
-    heal: 20
-    revive: 30
+    heal: 200
+    revive: 300
     rescue: 8
-    decode: 100
-    open_gate: 20
-    self_heal_limit: 25
+    decode: 1500
+    open_gate: 200
+    self_heal_limit: 250
     crows: 240
+    miss_calibration: 30
+    pallet_delay: 5
   hunter:
     struggle_free: 50
     hit_recovery: 40
@@ -47,12 +52,26 @@ timers:
     destroy_pallet: 40
     chair_survivor: 30
     balloon_survivor: 40
+    flare_gun: 100
 attributes:
   survivor:
     walk: 0.2
     incap: 0.08
     hit_boost_length: 60
+    vault: 15
+    pallet_range: 2.5
   hunter:
     struggle_tilt_angle: 60
+    swingbox_multiplier: 2.75
+    walk: 0.23
+    fall_distance_reset: 1
+    vault: 30
+  item:
+    football_durability: 3
+    wand_length: 60
+    syringe_durability: 6
+    wand_cd: 10
+    perfume_cd: 7
+    elbowpad_cd: 5
 light_effect: mobspawner_flames
 light_data: 1

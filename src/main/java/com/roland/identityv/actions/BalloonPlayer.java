@@ -2,8 +2,11 @@ package com.roland.identityv.actions;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.Hunter;
+import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.BalloonPlayerManager;
+import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
 import org.bukkit.entity.Player;
@@ -19,23 +22,27 @@ public class BalloonPlayer {
      * @param hunter
      * @param survivor
      */
-    public BalloonPlayer(IdentityV plugin, final Player hunter, final Player survivor) {
+    public BalloonPlayer(IdentityV plugin, final Hunter hunter, final Survivor survivor) {
         this.plugin = plugin;
+        final Player hunterP = hunter.getPlayer();
+        final Player survivorP = survivor.getPlayer();
 
-        SurvivorManager.getSurvivor(survivor).setHunter(hunter); // set hunter
+        survivor.setHunter(hunter); // set hunter
 
-        plugin.getServer().broadcastMessage(survivor.getDisplayName() + " was picked up!");
+        plugin.getServer().broadcastMessage(survivorP.getDisplayName() + " was picked up!");
+
 
         int balloonPlayerTimer = Config.getInt("timers.hunter","balloon_survivor");
-        BalloonPlayerManager.getInstance().add(hunter, balloonPlayerTimer);
+        FreezeActionManager.getInstance().add(survivorP, balloonPlayerTimer);
+        BalloonPlayerManager.getInstance().add(hunterP, balloonPlayerTimer);
 
-        Animations.decreasing_ring(hunter.getLocation(),"animations.hunter","balloon",2.5,balloonPlayerTimer);
+        Animations.decreasing_ring(hunterP.getLocation(),"animations.hunter","balloon",2.5,balloonPlayerTimer);
 
         new BukkitRunnable() {
             public void run() {
-                survivor.setExp((float) SurvivorManager.getSurvivor(survivor).getStruggleProgress() / (float) Config.getInt("timers.survivor","struggle"));
-                hunter.setPassenger(survivor);
-                SurvivorManager.getSurvivor(survivor).setState(State.BALLOON);
+                survivorP.setExp((float) survivor.getStruggleProgress() / (float) Config.getInt("timers.survivor","struggle"));
+                hunter.getPlayer().setPassenger(survivor.getPlayer());
+                survivor.setState(State.BALLOON);
                 // Survivor can't move
                 cancel();
             }
