@@ -4,6 +4,7 @@ import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.DungeonManager;
+import com.roland.identityv.managers.gamecompmanagers.GateManager;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import org.bukkit.ChatColor;
@@ -14,6 +15,8 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Directional;
 import org.bukkit.material.MaterialData;
@@ -52,6 +55,7 @@ public class MapCommand extends PlayerCommand {
                     int slabsCount = 0;
                     int barsCount = 0;
                     int dungeonsCount = 0;
+                    int chestsCount = 0;
 
                     Config.addMapData("coords",minX + "," + minY + "," + minZ);
                     Config.addMapData("coords",maxX + "," + maxY + "," + maxZ);
@@ -89,11 +93,13 @@ public class MapCommand extends PlayerCommand {
                                     String data = bX + "," + bY + "," + bZ;
                                     Config.addMapData("daylight_detector",data);
                                     dungeonsCount++;
+                                } else if (b.getType() == Material.CHEST) {
+                                    chestsCount++;
                                 }
                             }
                         }
                     }
-                    p.sendMessage(ChatColor.GREEN + "Successfully saved map! Banners: "+bannersCount+" Slabs: "+slabsCount+" Bars: "+barsCount+ "Dungeons: "+dungeonsCount);
+                    p.sendMessage(ChatColor.GREEN + "Successfully saved map! Banners: "+bannersCount+" Slabs: "+slabsCount+" Bars: "+barsCount+ "Dungeons: "+dungeonsCount + " Chests: "+chestsCount);
                 }
 
 
@@ -103,6 +109,7 @@ public class MapCommand extends PlayerCommand {
             }
 
             if (args[0].equalsIgnoreCase("refresh")) {
+
                 // Setup dungeons in manager
                 DungeonManager.clear();
                 for (String data : Config.getMapData("daylight_detector")) {
@@ -132,7 +139,12 @@ public class MapCommand extends PlayerCommand {
                     for (int bY = minY; bY < maxY; bY++) {
                         for (int bZ = minZ; bZ < maxZ; bZ++) {
                             Block b = p.getWorld().getBlockAt(bX, bY, bZ);
-                            // Remove green clay and black glass
+                            // Detect any gates
+                            if (b.getType() == Material.TRIPWIRE_HOOK) {
+                                GateManager.add(b.getLocation());
+                            }
+
+                            // Remove green clay and black glass and frames and acacia fences
                             if (b.getType() == Material.STAINED_GLASS && b.getData() == DyeColor.BLACK.getData()) {
                                 b.setType(Material.AIR);
                                 continue;
@@ -141,7 +153,18 @@ public class MapCommand extends PlayerCommand {
                                 b.setType(Material.AIR);
                                 continue;
                             }
+                            if (b.getType() == Material.ACACIA_FENCE) {
+                                b.setType(Material.AIR);
+                                continue;
+                            }
                         }
+                    }
+                }
+
+                // Kill all item frames
+                for (Entity en : p.getWorld().getNearbyEntities(new Location(p.getWorld(),(maxX+minX) / 2, (maxY+minY) / 2 ,(maxZ+minZ) / 2),200, 200, 200)) {
+                    if (en.getType() == EntityType.ITEM_FRAME) {
+                        en.remove();
                     }
                 }
 

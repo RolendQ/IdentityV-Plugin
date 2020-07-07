@@ -29,6 +29,8 @@ public class BalloonPlayer {
 
         survivor.setHunter(hunter); // set hunter
 
+        hunter.resetInvisTimer();
+
         plugin.getServer().broadcastMessage(survivorP.getDisplayName() + " was picked up!");
 
 

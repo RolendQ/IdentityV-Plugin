@@ -28,21 +28,21 @@ public class Holograms {
         entityIds = new HashMap<Integer, String>();
     }
 
-    public static void alert(final Player hunter, final Location loc) {
-        hunter.playSound(hunter.getLocation(), Sound.ANVIL_LAND,1,0);
+    public static void alert(final Player player, final Location loc, int duration) {
+        player.playSound(player.getLocation(), Sound.ANVIL_LAND,1,0);
         //loc.getWorld().strikeLightningEffect(loc);
 
-        EntityLightning lightning = new EntityLightning(((CraftWorld)hunter.getWorld()).getHandle(), loc.getX(), loc.getY(), loc.getZ());
+        EntityLightning lightning = new EntityLightning(((CraftWorld)player.getWorld()).getHandle(), loc.getX(), loc.getY(), loc.getZ());
         //Console.log("lightning: "+lightning.getChunkCoordinates().toString());
         PacketPlayOutSpawnEntityWeather packet = new PacketPlayOutSpawnEntityWeather(lightning);
-        ((CraftPlayer) hunter).getHandle().playerConnection.sendPacket(packet);
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
 
-        box(hunter,loc);
+        box(player,loc);
         new BukkitRunnable() {
             public void run() {
-                delete(hunter);
+                delete(player);
             }
-        }.runTaskLater(plugin, 40);
+        }.runTaskLater(plugin, duration);
     }
 
     public static void create(Player client, Location loc, String name) {

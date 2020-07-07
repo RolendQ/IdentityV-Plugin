@@ -43,34 +43,15 @@ public class PlayerInteractEntityListener implements Listener {
 
         Player p = e.getPlayer();
 
+        if (e.getRightClicked().getType() == EntityType.VILLAGER) { // Cancel any villager interaction
+            e.setCancelled(true);
+        }
+
         // USE ITEM FIRST
         if (SurvivorManager.isSurvivor(p) && p.getItemInHand() != null) {
             if (ItemManager.isItem(p.getItemInHand().getType())) {
                 ItemManager.useItem(p.getItemInHand().getType(), SurvivorManager.getSurvivor(p));
                 return;
-            }
-        }
-
-        if (e.getRightClicked().getType() == EntityType.VILLAGER) { // Cancel any villager interaction
-            e.setCancelled(true);
-
-            Controller c = Controller.getController(e.getRightClicked().getEntityId());
-            Survivor s = c.getSurvivor();
-            Survivor robotPlaceholder = c.getRobotPlaceholder();
-
-            if (s != null) {
-                Console.log("Found owner of robot: "+s.getPlayer().getDisplayName());
-
-                Survivor clickerS = SurvivorManager.getSurvivor(p);
-
-                // HEAL
-                if (clickerS.getState() == State.NORMAL ||
-                        clickerS.getState() == State.INCAP) {
-                    if (s.getPlayer().getHealth() < 4) { // TODO this needs fixing because health is bot's
-                        clickerS.startCloneHeal(robotPlaceholder,s); // Stops self healing automatically
-                    }
-                    return;
-                }
             }
         }
 
@@ -90,19 +71,9 @@ public class PlayerInteractEntityListener implements Listener {
                 }
             // SURVIVOR
             } else {
-                Survivor clickerS = SurvivorManager.getSurvivor(p);
 
-                // HEAL
-                if (clickerS.getState() == State.NORMAL ||
-                        clickerS.getState() == State.INCAP) {
-                    if (clickedP.getHealth() < 4) {
-                        clickerS.startHeal(s); // Stops self healing automatically
-                    }
-                    return;
-                }
             }
         }
-
 
     }
 }

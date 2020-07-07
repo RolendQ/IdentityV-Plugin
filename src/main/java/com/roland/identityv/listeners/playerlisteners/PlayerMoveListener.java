@@ -55,6 +55,7 @@ public class PlayerMoveListener implements Listener {
         if (SurvivorManager.isSurvivor(p)) {
             // Survivor
             Survivor s = SurvivorManager.getSurvivor(p);
+
             if (s.getState() != State.NORMAL && s.getState() != State.INCAP) return; // make sure not balloon or chair, dead or free
 
             // Check if escaped

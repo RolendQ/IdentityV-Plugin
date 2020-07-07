@@ -47,10 +47,12 @@ public class Football extends Item {
                 Vector dashDir = p.getEyeLocation().getDirection();
                 dashDir.setY(0);
                 dashDir.normalize();
-                dashDir.multiply(0.7); // could be config
+                dashDir.multiply(Config.getDouble("attributes.item","football_speed"));
                 useTime++;
                 //Console.log("Dash: " + dashDir.toString());
                 p.setVelocity(dashDir);
+
+                Animations.one(p.getLocation().clone().add(0,1,0),"animations.item","football_use");
 
                 itemStack = p.getItemInHand(); // TODO if not football, cancel
 
@@ -74,5 +76,10 @@ public class Football extends Item {
         task.cancel();
         task = null;
         s.setItem(null);
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.LEATHER_HELMET;
     }
 }

@@ -1,13 +1,31 @@
 package com.roland.identityv.utils;
 
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlayerUtil {
+
+    // Positive X: EAST
+    // Positive Z: SOUTH
+    public static BlockFace[][] faces = {
+            {BlockFace.EAST,BlockFace.SOUTH,BlockFace.SOUTH_EAST}, // up right
+            {BlockFace.WEST,BlockFace.SOUTH,BlockFace.SOUTH_WEST}, // up left
+            {BlockFace.EAST,BlockFace.NORTH,BlockFace.NORTH_EAST}, // down right
+            {BlockFace.WEST,BlockFace.NORTH,BlockFace.NORTH_WEST}, // down left
+
+
+//            {BlockFace.EAST,BlockFace.NORTH,BlockFace.NORTH_EAST}, // down right
+//            {BlockFace.WEST,BlockFace.NORTH,BlockFace.NORTH_WEST}, // down left
+//            {BlockFace.EAST,BlockFace.SOUTH,BlockFace.SOUTH_EAST}, // up right
+//            {BlockFace.WEST,BlockFace.SOUTH,BlockFace.SOUTH_WEST}, // up left
+    };
+
     public static boolean isTouchingWall(Player p) {
         double x = p.getLocation().getX();
         double z = p.getLocation().getZ();
@@ -36,5 +54,72 @@ public class PlayerUtil {
             if (pot.getType() == PotionEffectType.INVISIBILITY) return true;
         }
         return false;
+    }
+
+    public static BlockFace[] getTwoByTwo(Location loc) {
+        double x = loc.getX() - ((int) loc.getX());
+        double z = loc.getZ() - ((int) loc.getZ());
+        if (x > 0) {
+            if (x < 0.5) {
+                if (z > 0) {
+                    if (z > 0.5) {
+                        return PlayerUtil.faces[0];
+                    } else {
+                        return PlayerUtil.faces[2];
+                    }
+                } else {
+                    if (z < -0.5) {
+                        return PlayerUtil.faces[0];
+                    } else {
+                        return PlayerUtil.faces[2];
+                    }
+                }
+            } else {
+                if (z > 0) {
+                    if (z > 0.5) {
+                        return PlayerUtil.faces[1];
+                    } else {
+                        return PlayerUtil.faces[3];
+                    }
+                } else {
+                    if (z < -0.5) {
+                        return PlayerUtil.faces[1];
+                    } else {
+                        return PlayerUtil.faces[3];
+                    }
+                }
+            }
+
+        } else {
+            if (x > -0.5) {
+                if (z > 0) {
+                    if (z > 0.5) {
+                        return PlayerUtil.faces[0];
+                    } else {
+                        return PlayerUtil.faces[2];
+                    }
+                } else {
+                    if (z < -0.5) {
+                        return PlayerUtil.faces[0];
+                    } else {
+                        return PlayerUtil.faces[2];
+                    }
+                }
+            } else {
+                if (z > 0) {
+                    if (z > 0.5) {
+                        return PlayerUtil.faces[1];
+                    } else {
+                        return PlayerUtil.faces[3];
+                    }
+                } else {
+                    if (z < -0.5) {
+                        return PlayerUtil.faces[1];
+                    } else {
+                        return PlayerUtil.faces[3];
+                    }
+                }
+            }
+        }
     }
 }

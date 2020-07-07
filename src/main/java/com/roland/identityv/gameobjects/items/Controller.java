@@ -41,6 +41,8 @@ public class Controller extends Item {
     public Gate robotGate;
     public Survivor robotPlaceholder;
 
+    public double survivorHealth;
+
     public static HashMap<Integer,Integer> clones = new HashMap<Integer,Integer>();
 
     public static ItemStack[] botArmor = {new ItemStack(Material.CHAINMAIL_BOOTS, 1),
@@ -59,6 +61,7 @@ public class Controller extends Item {
         this.injured = null;
         this.robotGate = null;
         this.robotPlaceholder = new Survivor(plugin, s, entityLoc, s.game);
+        this.survivorHealth = p.getHealth();
     }
 
 
@@ -73,6 +76,15 @@ public class Controller extends Item {
 
             // Cancel durability decrease
             task.cancel();
+
+            // Update healing progress
+            s.setHealingProgress(robotPlaceholder.getHealingProgress());
+
+            // Set health
+//            p = s.getPlayer();
+//            p.setMaxHealth(4);
+//            p.setHealth(survivorHealth);
+            p.removePotionEffect(PotionEffectType.WITHER);
 
             // Check if player (in robot) was decoding, healing, or opening gate
             if (s.getAction() == Action.DECODE) {
@@ -109,10 +121,6 @@ public class Controller extends Item {
 
                                 if (!CalibrationManager.hasCalibration(robotPlaceholder)) CalibrationManager.give(robotPlaceholder, Action.DECODE);
 
-                                // TODO Can Hit calibration if player isRobot
-//                                new MissCalibration(plugin, entityLoc);
-//                                s.getPlayer().sendMessage("Robot has missed a calibration");
-//                                clearRobotTask();
                             }
                         }
                         float progress = (float) robotCipher.getProgress() / (float) Config.getInt("timers.survivor","decode");
@@ -128,13 +136,15 @@ public class Controller extends Item {
                 };
                 robotsTask.runTaskTimer(plugin, 5, 10);
 
-                s.clearActionRunnable(true); // Now clear survivor's decoding
-            } else if (s.getAction() == Action.HEAL) {
+                //s.clearActionRunnable(true); // Now clear survivor's decoding
+            } else if (s.getAction() == Action.HEAL && s.getTarget() != robotPlaceholder) { // Can't heal self without using the bot
+                Console.log("Bot continues healing");
                 injured = s.getTarget();
                 robotsAction = Action.HEAL;
                 robotsTask = new BukkitRunnable() {
                     public void run() {
                         if (injured.getAction() != Action.GETHEAL) { // Player cleared it
+                            Console.log("Injured player cleared it");
                             clearRobotTask();
                             return;
                         }
@@ -170,7 +180,8 @@ public class Controller extends Item {
                 };
                 robotsTask.runTaskTimer(plugin, 5, 10);
 
-                s.clearActionRunnable(true); // Now clear survivor's healing
+                //s.clearActionRunnable(true); // Now clear survivor's healing
+
             } else if (s.getAction() == Action.OPEN) {
                 robotsAction = Action.OPEN;
                 robotGate = GateManager.getGateFromSurvivor(s);
@@ -187,9 +198,20 @@ public class Controller extends Item {
                 };
                 robotsTask.runTaskTimer(plugin, 5, 10);
 
-                s.clearActionRunnable(true);
+                //s.clearActionRunnable(true);
 
                 robotGate.setOpener(robotPlaceholder); // So others can't open
+            }
+
+            s.clearActionRunnable(true); // Now clear survivor's actions
+
+            // If body was being healed
+            if (robotPlaceholder.getAction() == Action.GETHEAL) {
+                robotPlaceholder.clearActionRunnable(true);
+                if (robotPlaceholder.getHealer() == null) {
+                    Console.log("Healer is null");
+                } else if (robotPlaceholder.getHealer() != s) // Stop healing yourself
+                    robotPlaceholder.getHealer().startHeal(s); // Start healing again
             }
 
 
@@ -200,8 +222,19 @@ public class Controller extends Item {
         } else {
             isRobot = true;
 
+            // Update robotPlaceholder
+            robotPlaceholder.setHealingProgress(s.getHealingProgress());
+
+            // Set health
+            p = s.getPlayer();
+            //survivorHealth = p.getHealth();
+            //Console.log("Set survivor health: "+survivorHealth);
+            p.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 9999, 0, true, false),true);
+
             // Clear action here
             s.clearActionRunnable();
+
+            if (task != null) task.cancel();
 
             // Durability task
             task = new BukkitRunnable() {
@@ -297,7 +330,10 @@ public class Controller extends Item {
             }
         }.runTaskTimer(plugin, 0,5);
 
-        EntityPlayer npc = NPCs.spawnNPC(p, location);
+        EntityPlayer npc;
+        if (!isRobot) {
+            npc = NPCs.spawnNPC(p, location);
+        } else npc = NPCs.spawnNPC(p, location.clone().add(0,-0.3,0)); // a little lower
 
         villagerID = v.getEntityId();
         clones.put(villagerID,npc.getId());
@@ -315,6 +351,11 @@ public class Controller extends Item {
         if (isRobot) {
             isRobot = false;
             task.cancel(); // durability
+
+            s.setHealingProgress(robotPlaceholder.getHealingProgress());
+
+            p.removePotionEffect(PotionEffectType.WITHER);
+
             p.teleport(entityLoc);
             p.getInventory().setArmorContents(s.getArmor());
 
@@ -410,11 +451,11 @@ public class Controller extends Item {
         return null;
     }
 
-    public void hit() {
+    public void hit(Hunter h) {
         Console.log("Clone was hit!");
         if (isRobot) {
             use(); // Forces you to go back
-            s.hit(2); // Cannot terror shock
+            s.hit(h,2); // Cannot terror shock
         }
         else {
             killBot();
@@ -423,7 +464,7 @@ public class Controller extends Item {
             new BukkitRunnable() {
                 public void run() {
                     for (Hunter h : HunterManager.getHunters()) { // Alerts all
-                        Holograms.alert(h.getPlayer(), s.getPlayer().getLocation());
+                        Holograms.alert(h.getPlayer(), s.getPlayer().getLocation(), 20);
                     }
                 }
             }.runTaskLater(plugin, 40);
@@ -437,5 +478,18 @@ public class Controller extends Item {
 
     public Survivor getRobotPlaceholder() {
         return robotPlaceholder;
+    }
+
+    public void setSurvivorHealth(double survivorHealth) {
+        this.survivorHealth = survivorHealth;
+    }
+
+    public double getSurvivorHealth() {
+        return survivorHealth;
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.IRON_PICKAXE;
     }
 }

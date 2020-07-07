@@ -2,8 +2,10 @@ package com.roland.identityv.gameobjects.items;
 
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.PlayerUtil;
+import org.bukkit.Material;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -19,6 +21,9 @@ public class ElbowPad extends Item {
 
     public boolean use() {
         if (PlayerUtil.isTouchingWall(p)) {
+
+            Animations.one(p.getLocation(),"animations.item","elbowpad_use",3);
+
             useTime = 0;
             reduceItem();
             task = new BukkitRunnable() {
@@ -47,5 +52,10 @@ public class ElbowPad extends Item {
     @Override
     public int getCD() {
         return Config.getInt("attributes.item","elbowpad_cd");
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.IRON_CHESTPLATE;
     }
 }

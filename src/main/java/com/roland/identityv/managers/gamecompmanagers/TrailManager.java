@@ -5,6 +5,7 @@ import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Cipher;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.gameobjects.items.Controller;
+import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.PlayerUtil;
 import org.bukkit.Effect;
@@ -63,7 +64,8 @@ public class TrailManager {
             if (!SurvivorManager.isSurvivor(p2)) {
                 for (int i = 0; i < 8; i++) {
                     //p.getWorld().playEffect(p.getLocation().add(0, 0.1, 0), Effect.valueOf(plugin.getConfig().getString("trail_effect").toUpperCase()), plugin.getConfig().getInt("trail_data"));
-                    p2.playEffect(newLoc, Effect.valueOf(plugin.getConfig().getString("trail_effect").toUpperCase()), plugin.getConfig().getInt("trail_data"));
+                    p2.playEffect(newLoc, Effect.valueOf(Config.getStr("animations.survivor","trail").toUpperCase()), 1);
+                    // Length is calculated naturally by game
                 }
             }
         }

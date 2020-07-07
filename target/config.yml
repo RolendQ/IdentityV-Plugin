@@ -15,8 +15,12 @@ animations:
     heartbeat: heart
     incap: lavadrip
     death: potion_break
+    trail: footstep
     crows: smoke
     miss_calibration: potion_break
+    open_chest: flying_glyph
+    finish_chest: flame
+    open_and_close_chest: coloured_dust
   hunter:
     preswing: fireworks_spark
     swing: potion_break
@@ -25,8 +29,14 @@ animations:
     stun_recovery: coloured_dust
     chair: spell
     destroy_pallet: spell
+    light: mobspawner_flames
   item:
     perfume_use: potion_break
+    controller_use: spell
+    elbowpad_use: potion_break
+    football_use: ender_signal
+    flaregun_use: crit
+    flaregun_hit: fireworks_spark
 timers:
   survivor:
     chair: 240
@@ -34,8 +44,8 @@ timers:
     struggle_limit: 10
     struggle_tilt_interval: 7
     struggle: 30
-    heal: 200
-    revive: 300
+    heal: 300
+    revive: 400
     rescue: 8
     decode: 1500
     open_gate: 200
@@ -43,16 +53,19 @@ timers:
     crows: 240
     miss_calibration: 30
     pallet_delay: 5
+    open_chest: 200
+    open_and_close_chest_duration: 20
   hunter:
     struggle_free: 50
     hit_recovery: 40
-    miss_recovery: 20
+    miss_recovery: 15
     swing_delay: 10
     pallet_stun: 60
     destroy_pallet: 40
     chair_survivor: 30
     balloon_survivor: 40
     flare_gun: 100
+    window_blocker_length: 400
 attributes:
   survivor:
     walk: 0.2
@@ -60,18 +73,41 @@ attributes:
     hit_boost_length: 60
     vault: 15
     pallet_range: 2.5
+    borrowed_time_speed: 0.5
+    borrowed_time_length: 80
+    tide_length: 400
+    boost_cd: 600
+    boost_length: 60
+    boost_speed: 0.5
   hunter:
     struggle_tilt_angle: 60
     swingbox_multiplier: 2.75
     walk: 0.23
     fall_distance_reset: 1
     vault: 30
+    flicker_length: 4
+    foggy_durability: 1
+    detention_length: 1200
   item:
     football_durability: 3
     wand_length: 60
     syringe_durability: 6
-    wand_cd: 10
+    wand_cd: 1
     perfume_cd: 7
     elbowpad_cd: 5
+    controller_durability: 1
+    perfume_durability: 10
+    football_speed: 0.7
+    perfume_rewind: 15
+    syringe_timer_speed: 15
+    wand_clone_length: 200
+  chest:
+    flaregun_chance: 7
+    controller_chance: 14
+    football_chance: 21
+    elbowpad_chance: 31
+    perfume_chance: 50
+    wand_chance: 70
+    syringe_chance: 100
 light_effect: mobspawner_flames
 light_data: 1

@@ -1,0 +1,69 @@
+6f31c9ca-de4f-4ad6-ad0e-0c0eecbb0458:
+  '1':
+    world: Drehmal
+    x: 727
+    y: 65
+    z: 630
+  cave2:
+    world: Drehmal
+    x: 4205
+    y: 16
+    z: 357
+  nether:
+    world: Drehmal_nether
+    x: -359
+    y: 58
+    z: -313
+19c98063-4fab-4e1c-8756-fb5f8249c885:
+  default:
+    world: Drehmal
+    x: -2285
+    y: 95
+    z: -3913
+ed09e387-1d32-4dec-b1f4-c11f569d193f:
+  home:
+    world: Drehmal
+    x: 677
+    y: 69
+    z: 563
+194e7b2f-4ddc-47bd-aeac-9fe316c969dc:
+  default:
+    world: Drehmal
+    x: 755
+    y: 68
+    z: 604
+e2f4b2ad-323e-4466-ad83-e7bce139a765:
+  default:
+    world: Drehmal
+    x: 606
+    y: 71
+    z: 718
+c313b9bf-0180-4a25-b63a-e8c62d1cb224:
+  default:
+    world: Drehmal
+    x: 5078
+    y: 139
+    z: 5616
+8268dad7-4bf0-4f7e-a702-628006775072:
+  default:
+    world: Drehmal
+    x: 782
+    y: 65
+    z: 645
+6469ed62-329c-48c3-99f5-14e041dc041a:
+  '1':
+    world: Drehmal
+    x: 859
+    y: 68
+    z: 712
+  japan:
+    world: Drehmal
+    x: 5014
+    y: 186
+    z: 5628
+228d725b-01c8-444b-8349-2b0abaff80e0:
+  default:
+    world: Drehmal
+    x: 4193
+    y: 73
+    z: 1227

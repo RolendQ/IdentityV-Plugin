@@ -29,7 +29,13 @@ public class SurvivorManager {
             public void run() {
                 for (Survivor s : getSurvivors()) {
                     if (s.getState() == State.NORMAL) {
-                        ScoreboardUtil.set("&a" + s.getPlayer().getDisplayName(), s.getNameLine());
+                        if (s.getTideDuration() > 0) {
+                            // Tide colors
+                            if (s.wasHitUnderTide()) ScoreboardUtil.set("&c" + s.getPlayer().getDisplayName(), s.getNameLine());
+                            else ScoreboardUtil.set("&b" + s.getPlayer().getDisplayName(), s.getNameLine());
+                        } else {
+                            ScoreboardUtil.set("&a" + s.getPlayer().getDisplayName(), s.getNameLine());
+                        }
                         ScoreboardUtil.setBar((float) s.getPlayer().getHealth() / (float) 4, "a", s.getBarLine());
                     } else if (s.getState() == State.INCAP) {
                         ScoreboardUtil.set("&e" + s.getPlayer().getDisplayName(), s.getNameLine());
@@ -63,9 +69,11 @@ public class SurvivorManager {
     }
 
     public static void removeSurvivor(Player p) {
-        ScoreboardUtil.clear(survivors.get(p).getNameLine());
-        ScoreboardUtil.clear(survivors.get(p).getBarLine());
-        survivors.remove(p);
+        if (survivors.containsKey(p)) {
+            ScoreboardUtil.clear(survivors.get(p).getNameLine());
+            ScoreboardUtil.clear(survivors.get(p).getBarLine());
+            survivors.remove(p);
+        }
     }
 
     public static boolean isSurvivor(Player p) {

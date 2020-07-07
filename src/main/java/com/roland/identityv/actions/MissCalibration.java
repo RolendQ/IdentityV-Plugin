@@ -33,7 +33,7 @@ public class MissCalibration {
 
             // Alert
             for (Hunter h : HunterManager.getHunters()) {
-                Holograms.alert(h.getPlayer(), survivorP.getLocation());
+                Holograms.alert(h.getPlayer(), survivorP.getLocation(), 40);
             }
 
             Animations.one(survivor.getPlayer().getLocation(),"animations.survivor","miss_calibration",5);
@@ -47,7 +47,7 @@ public class MissCalibration {
 
             // Bot triggers alert
             for (Hunter h : HunterManager.getHunters()) {
-                Holograms.alert(h.getPlayer(), ((Controller) survivor.getOwner().getItem()).getEntityLoc());
+                Holograms.alert(h.getPlayer(), ((Controller) survivor.getOwner().getItem()).getEntityLoc(), 40);
             }
 
             Animations.one(((Controller) survivor.getOwner().getItem()).getEntityLoc(),"animations.survivor","miss_calibration",5);

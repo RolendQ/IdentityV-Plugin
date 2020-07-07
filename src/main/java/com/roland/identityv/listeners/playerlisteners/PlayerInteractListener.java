@@ -5,9 +5,7 @@ import com.roland.identityv.actions.DropPallet;
 import com.roland.identityv.actions.HunterSwing;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
-import com.roland.identityv.gameobjects.Cipher;
-import com.roland.identityv.gameobjects.RocketChair;
-import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.gameobjects.*;
 import com.roland.identityv.gameobjects.items.FlareGun;
 import com.roland.identityv.gameobjects.items.Football;
 import com.roland.identityv.gameobjects.items.Perfume;
@@ -16,6 +14,7 @@ import com.roland.identityv.managers.gamecompmanagers.*;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockFace;
@@ -70,7 +69,30 @@ public class PlayerInteractListener implements Listener {
                     e.setCancelled(true);
                     if (CalibrationManager.hasCalibration(s) && CalibrationManager.get(s).getType() == com.roland.identityv.enums.Action.DECODE) {
                         CalibrationManager.get(s).hit();
+                    // SURVIVOR START DECODING
+                    } else {
+                        Cipher c = CipherManager.getCipher(e.getClickedBlock().getLocation());
+                        if (c != null && !c.isDone() && s.getAction() != com.roland.identityv.enums.Action.DECODE &&
+                        c.getLocation().distance(p.getLocation()) < 1.5) s.startDecode(c);
+                        return;
                     }
+                }
+
+                // CHEST
+                if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.CHEST) {
+                    e.setCancelled(true);
+                    Chest c = ChestManager.getChest(e.getClickedBlock().getLocation());
+                    if (!s.isControllingRobot() && c != null && !c.isEmpty() && c.getOpener() == null && s.getAction() != com.roland.identityv.enums.Action.OPENCHEST &&
+                            c.getLocation().distance(p.getLocation()) < 1.5) s.startOpenChest(c);
+                    return;
+                }
+
+                // GATE
+                if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.TRIPWIRE_HOOK) {
+                    e.setCancelled(true);
+                    Gate g = GateManager.getGate(e.getClickedBlock().getLocation());
+                    if (!g.isDone() && g.getOpener() == null) s.startOpen(g); // must have 5 ciphers done
+                    return;
                 }
 
                 // STRUGGLE
@@ -103,7 +125,7 @@ public class PlayerInteractListener implements Listener {
             // RIGHT CLICK ACTIONS
             Material b = e.getClickedBlock().getType();
 
-            if (b == Material.BEACON) e.setCancelled(true);
+            if (b == Material.BEACON || b == Material.CHEST) e.setCancelled(true);
 
             // HUNTER DESTROY PALLET
             if (HunterManager.isHunter(p)) {
@@ -118,20 +140,7 @@ public class PlayerInteractListener implements Listener {
                 }
             }
             if (SurvivorManager.isSurvivor(p)) {
-                // SURVIVOR DROP PALLET
-                if (b == Material.WALL_BANNER) {
-                    Banner banner = (Banner) e.getClickedBlock().getState();
-                    if (banner.getBaseColor() == DyeColor.GREEN) {
-                        for (Entity entity : banner.getWorld().getNearbyEntities(banner.getLocation(), 2, 2, 2)) {
-                            if (entity.getEntityId() == p.getEntityId() && SurvivorManager.getSurvivor(p).getState() == State.NORMAL) { // Survivor
-                                org.bukkit.material.Banner bannerData = (org.bukkit.material.Banner) banner.getData();
-                                new DropPallet(plugin, SurvivorManager.getSurvivor(p), e.getClickedBlock().getRelative(BlockFace.DOWN), bannerData.getAttachedFace().getOppositeFace());
-                                return;
-                            }
-                        }
-                    }
-                    return;
-                }
+
             }
         }
 

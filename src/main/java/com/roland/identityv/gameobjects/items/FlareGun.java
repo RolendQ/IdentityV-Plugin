@@ -3,7 +3,9 @@ package com.roland.identityv.gameobjects.items;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.managers.gamecompmanagers.HunterManager;
+import com.roland.identityv.utils.Animations;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -24,13 +26,15 @@ public class FlareGun extends Item {
 
         reduceItem();
 
+        Animations.random(p.getLocation(),"animations.item","flaregun_use",1, 3);
+
         final Arrow arrow = p.launchProjectile(Arrow.class);
         new BukkitRunnable() {
 
             public void run() {
                 for (Entity en : arrow.getNearbyEntities(6, 6, 6)){
                     if (en != arrow.getShooter() && en instanceof Player && HunterManager.isHunter((Player) en)){
-                        if (en.getType().isAlive()){
+                        if (en.getType().isAlive()) {
                             Location from = arrow.getLocation();
                             Location to = en.getLocation().add(0,1.5,0);
                             Vector vFrom = from.toVector();
@@ -59,5 +63,10 @@ public class FlareGun extends Item {
             }
         }
         return false;
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.FIREWORK;
     }
 }

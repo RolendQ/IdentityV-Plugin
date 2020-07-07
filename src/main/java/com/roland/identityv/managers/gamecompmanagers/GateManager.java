@@ -37,6 +37,12 @@ public class GateManager {
         return newGate;
     }
 
+    public static void add(Location loc) {
+        Console.log("Created new gate at start");
+        Gate newGate = new Gate(plugin,loc);
+        gates.add(newGate);
+    }
+
     public static void removeOpeningSurvivor(Survivor survivor) {
         for (Gate g : gates) {
             if (g.getOpener() == survivor) {

@@ -39,10 +39,10 @@ public class NPCs {
         for (Player pl : plugin.getServer().getOnlinePlayers()) {
             final PlayerConnection connection = ((CraftPlayer)pl).getHandle().playerConnection;
             connection.sendPacket(new PacketPlayOutNamedEntitySpawn(npc));
-            connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 1, head));
+            connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 4, head));
             connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 3, chest));
             connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 2, legs));
-            connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 4, feet));
+            connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 1, feet));
             connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 0, hand));
         }
 

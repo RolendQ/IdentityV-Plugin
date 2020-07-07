@@ -54,7 +54,7 @@ public class DropPallet {
                     if (entity.getType() == EntityType.PLAYER) {
                         Player p = (Player) entity;
                         if (HunterManager.isHunter(p) && !p.hasLineOfSight(survivor.getPlayer())) { // Hunter
-                            Holograms.alert(p,block.getLocation());
+                            Holograms.alert(p,block.getLocation(),40);
                         }
                     }
                 }
@@ -64,8 +64,7 @@ public class DropPallet {
                         Player p = (Player) entity;
                         if (HunterManager.isHunter(p)) { // Hunter
                             p.getServer().broadcastMessage(survivor.getPlayer().getDisplayName() + " stunned the hunter with a pallet");
-                            Animations.falling_rings(p.getLocation().add(0,1,0),"animations.hunter","stun_recovery",Config.getInt("timers.hunter","pallet_stun"));
-                            FreezeActionManager.getInstance().add(p, Config.getInt("timers.hunter","pallet_stun"));
+                            HunterManager.getHunter(p).stun(Config.getInt("timers.hunter","pallet_stun"));
                         }
                     }
                 }

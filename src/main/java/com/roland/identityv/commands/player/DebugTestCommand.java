@@ -21,16 +21,15 @@ import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import org.bukkit.entity.*;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.material.Directional;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -109,6 +108,46 @@ public class DebugTestCommand extends PlayerCommand {
 
             if (args[0].equalsIgnoreCase("dmg")) {
                 p.setHealth(2);
+                if (SurvivorManager.isSurvivor(p)) {
+                    SurvivorManager.getSurvivor(p).increaseSpeed(0.3,60);
+                }
+            }
+
+            if (args[0].equalsIgnoreCase("presence")) {
+                HunterManager.getHunter(p).incPresence(1);
+            }
+
+            if (args[0].equalsIgnoreCase("flicker")) {
+                HunterManager.getHunter(p).flicker();
+            }
+
+            if (args[0].equalsIgnoreCase("sethealth")) {
+                p.setMaxHealth(2);
+                p.setHealth(2);
+            }
+
+//            if (args[0].equalsIgnoreCase("chest")) {
+//                Block b = p.getLocation().getBlock();
+//                b.setType(Material.CHEST);
+//                BlockFace[] faces = {BlockFace.NORTH,BlockFace.SOUTH,BlockFace.EAST, BlockFace.WEST};
+//                for (BlockFace face : faces) {
+//                    if (b.getRelative(face).getType() == Material.AIR) {
+//                        b.getRelative(face).setType(Material.ITEM_FRAME);
+//                        ItemFrame i = p.getWorld().spawn(b.getRelative(face).getLocation(), ItemFrame.class);
+//                        i.setFacingDirection(face);
+//                    }
+//                }
+//            }
+
+            if (args[0].equalsIgnoreCase("perks")) {
+                if (SurvivorManager.isSurvivor(p)) {
+                    int[] persona = SurvivorManager.getSurvivor(p).getPersonaWeb();
+                    String str = "Your Persona Web: ";
+                    for (int n : persona) {
+                        str += n + ", ";
+                    }
+                    p.sendMessage(str);
+                }
             }
 
         }

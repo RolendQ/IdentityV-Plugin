@@ -32,6 +32,26 @@ public class ItemManager {
         return items.contains(m);
     }
 
+    public static void setItem(Material m, Survivor s) {
+        Item item = null;
+        if (m == Material.FIREWORK) {
+            item = new FlareGun(plugin, s);
+        } else if (m == Material.LEATHER_HELMET) {
+            item = new Football(plugin, s);
+        } else if (m == Material.GOLD_CHESTPLATE) {
+            item = new Perfume(plugin, s);
+        } else if (m == Material.BLAZE_ROD) {
+            item = new Wand(plugin, s);
+        } else if (m == Material.SHEARS) {
+            item = new Syringe(plugin, s);
+        } else if (m == Material.IRON_CHESTPLATE) {
+            item = new ElbowPad(plugin, s);
+        } else if (m == Material.IRON_PICKAXE) {
+            item = new Controller(plugin, s);
+        }
+        s.setItem(item);
+    }
+
     public static void useItem(Material m, final Survivor s) {
         if (s.getState() != State.NORMAL) return;
 
@@ -44,38 +64,27 @@ public class ItemManager {
 
         Item item = s.getItem();
         if (item == null) {
-            if (m == Material.FIREWORK) {
-                item = new FlareGun(plugin, s);
-            } else if (m == Material.LEATHER_HELMET) {
-                item = new Football(plugin, s);
-            } else if (m == Material.GOLD_CHESTPLATE) {
-                item = new Perfume(plugin, s);
-            } else if (m == Material.BLAZE_ROD) {
-                item = new Wand(plugin, s);
-            } else if (m == Material.SHEARS) {
-                item = new Syringe(plugin, s);
-            } else if (m == Material.IRON_CHESTPLATE) {
-                item = new ElbowPad(plugin, s);
-            } else if (m == Material.IRON_PICKAXE) {
-                item = new Controller(plugin, s);
-            }
-            s.setItem(item);
+            setItem(m,s);
         }
         if (item != null && item.use() && item.getCD() > 0) {
-            itemCDs.put(s,item.getCD());
-            // Decrease item cd
-            new BukkitRunnable() {
-                public void run() {
-                    int cd = itemCDs.get(s);
-                    s.getPlayer().setLevel(cd);
-                    if (cd > 0) {
-                        itemCDs.put(s, cd - 1);
-                    } else {
-                        itemCDs.remove(s);
-                        cancel();
-                    }
-                }
-            }.runTaskTimer(plugin, 0, 20);
+            addCD(s, item.getCD());
         }
+    }
+
+    public static void addCD(final Survivor s, int itemCD) {
+        itemCDs.put(s,itemCD);
+        // Decrease item cd
+        new BukkitRunnable() {
+            public void run() {
+                int cd = itemCDs.get(s);
+                s.getPlayer().setLevel(cd);
+                if (cd > 0) {
+                    itemCDs.put(s, cd - 1);
+                } else {
+                    itemCDs.remove(s);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20);
     }
 }

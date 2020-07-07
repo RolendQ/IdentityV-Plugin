@@ -1,6 +1,7 @@
 package com.roland.identityv.listeners.playerlisteners;
 
 import com.roland.identityv.actions.ChairPlayer;
+import com.roland.identityv.actions.DropPallet;
 import com.roland.identityv.actions.Vault;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
@@ -18,6 +19,8 @@ import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Banner;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Entity;
@@ -58,16 +61,23 @@ public class PlayerSneakListener implements Listener {
                 // Look for adjacent cipher or clay to vault
                 for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
                     Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
-                    if (loc.getBlock().getType() == Material.BEACON) {
-                        Cipher c = CipherManager.getCipher(loc);
-                        //if (c == null) Console.log("cipher is null");
-                        if (c != null && !c.isDone() && s.getAction() != Action.DECODE) s.startDecode(c);
-                        return;
+
+                    // DROP PALLET
+                    Block upper = loc.getBlock().getRelative(BlockFace.UP);
+                    if (upper.getType() == Material.WALL_BANNER) {
+                        Banner banner = (Banner) upper.getState();
+                        if (banner.getBaseColor() == DyeColor.GREEN) {
+                            org.bukkit.material.Banner bannerData = (org.bukkit.material.Banner) banner.getData();
+                            new DropPallet(plugin, SurvivorManager.getSurvivor(p), upper.getRelative(BlockFace.DOWN), bannerData.getAttachedFace().getOppositeFace());
+                            return;
+                        }
                     }
 
+                    // VAULT
                     if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
-                        if (!VaultManager.getInstance().hasNearbyVaults(p)) {
-                            new Vault(plugin, p, loc, i, Config.getInt("attributes.survivor", "vault"));
+                        // Check if there is anyone else vaulting or the window is blocked
+                        if (!VaultManager.getInstance().hasNearbyVaults(p) && loc.getBlock().getRelative(BlockFace.UP).getType() == Material.AIR) {
+                            new Vault(plugin, p, loc, i, Config.getInt("attributes.survivor", "vault"), loc.getBlock().getData());
                             return;
                         }
                     }
@@ -83,15 +93,6 @@ public class PlayerSneakListener implements Listener {
                         }
                     }
                 }
-
-                // Look for touching gate pad
-                Location head = p.getLocation().getBlock().getRelative(BlockFace.UP).getLocation();
-                if (p.getWorld().getBlockAt(head).getType() == Material.TRIPWIRE_HOOK) {
-                    Console.log("Found gate");
-                    Gate g = GateManager.getGate(head);
-                    if (!g.isDone() && g.getOpener() == null) s.startOpen(g); // must have 5 ciphers done
-                    return;
-                }
             }
             // INCAP
             else if (s.getState() == State.INCAP) {
@@ -106,8 +107,9 @@ public class PlayerSneakListener implements Listener {
                 for (int i = 0; i < PlayerSneakListener.faces.length; i++) {
                     Location loc = p.getLocation().getBlock().getRelative(PlayerSneakListener.faces[i]).getLocation();
                     if (loc.getBlock().getType() == Material.STAINED_CLAY && loc.getBlock().getData() != DyeColor.RED.getData()) {
-                        if (!VaultManager.getInstance().hasNearbyVaults(p)) {
-                            new Vault(plugin, p, loc, i, Config.getInt("attributes.hunter", "vault"));
+                        // Check if there is anyone else vaulting or the window is blocked
+                        if (!VaultManager.getInstance().hasNearbyVaults(p) && loc.getBlock().getRelative(BlockFace.UP).getType() == Material.AIR) {
+                            new Vault(plugin, p, loc, i, Config.getInt("attributes.hunter", "vault"), loc.getBlock().getData());
                         }
                     }
                 }

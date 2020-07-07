@@ -38,7 +38,7 @@ public class HologramCommand extends PlayerCommand {
                 }
 
                 if (args[0].equalsIgnoreCase("alert")) {
-                    Holograms.alert(p,p.getLocation());
+                    Holograms.alert(p,p.getLocation(),20);
                     return true;
                 }
 

@@ -26,7 +26,12 @@ public class EntityDamageListener implements Listener {
      */
     @EventHandler
     public void onEntityDamage(final EntityDamageEvent e) {
-        Console.log("Cause " + e.getCause().name());
+        if (!e.getCause().name().equalsIgnoreCase("WITHER")) Console.log("Cause " + e.getCause().name());
+
+        if (e.getCause() == EntityDamageEvent.DamageCause.WITHER) {
+            e.setCancelled(true);
+            return;
+        }
 
         // Removes all knockback
         plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {

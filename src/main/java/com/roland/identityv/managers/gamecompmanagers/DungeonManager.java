@@ -43,6 +43,8 @@ public class DungeonManager {
     public static void spawnRandom() {
         Random r = new Random();
         Console.log("Dungeons size: "+dungeons.size());
+        if (dungeons.size() == 0) return; // dungeons not setup yet
+
         int index = r.nextInt(dungeons.size());
         activeDungeon = dungeons.get(index); // Set active dungeon
         activeDungeon.spawn();

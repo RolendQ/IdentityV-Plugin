@@ -1,20 +1,17 @@
 package com.roland.identityv.gameobjects.items;
 
-import com.mojang.authlib.GameProfile;
 import com.roland.identityv.core.IdentityV;
-import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.gameobjects.Survivor;
-import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.NPCs;
+import com.roland.identityv.utils.PlayerUtil;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_8_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -45,7 +42,20 @@ public class Wand extends Item {
         p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Config.getInt("attributes.item","wand_length"), 0, true, false),true);
 
         final Location location = p.getLocation();
-        p.getWorld().getBlockAt(p.getLocation()).setType(Material.BARRIER);
+
+        //p.getWorld().getBlockAt(p.getLocation()).setType(Material.BARRIER);
+
+        Block block = p.getLocation().getBlock();
+        block.setType(Material.BARRIER);
+
+        // 2 by 2 barriers
+        for (BlockFace face : PlayerUtil.getTwoByTwo(p.getLocation())) {
+            //p.sendMessage("Face: "+face);
+            if (block.getRelative(face).getType() == Material.AIR) {
+                block.getRelative(face).setType(Material.BARRIER);
+            }
+        }
+
         final LivingEntity v = (LivingEntity) p.getWorld().spawnEntity(location, EntityType.VILLAGER);
         v.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 9999, 0, true, false),true);
 
@@ -70,19 +80,27 @@ public class Wand extends Item {
             public void run() {
                 Wand.removeClone(v.getEntityId(),location);
             }
-        }.runTaskLater(plugin, 200);
+        }.runTaskLater(plugin, Config.getInt("attributes.item","wand_clone_length"));
 
         return true;
     }
 
 
     // Removes any clone
-    public static void removeClone(Integer villagerID, Location loc) {
-        if (!clones.containsKey(villagerID)) return;
+    public static boolean removeClone(Integer villagerID, Location loc) {
+        if (!clones.containsKey(villagerID)) return false;
         // Delete villager
         for (Entity en : loc.getWorld().getNearbyEntities(loc,3,3,3)) {
             if (en.getEntityId() == villagerID) {
-                loc.getWorld().getBlockAt(loc).setType(Material.AIR);
+                Block block = loc.getBlock();
+                block.setType(Material.AIR);
+
+                for (BlockFace face : PlayerUtil.getTwoByTwo(loc)) {
+                    if (block.getRelative(face).getType() == Material.BARRIER) {
+                        block.getRelative(face).setType(Material.AIR);
+                    }
+                }
+
                 en.remove();
                 for (Player p : Console.plugin.getServer().getOnlinePlayers()) { // TODO plugin weird
                     final PlayerConnection connection = ((CraftPlayer) p).getHandle().playerConnection;
@@ -90,13 +108,19 @@ public class Wand extends Item {
                     connection.sendPacket(pa);
                 }
                 clones.remove(villagerID);
-                return;
+                break;
             }
         }
+        return true;
     }
 
     @Override
     public int getCD() {
         return Config.getInt("attributes.item","wand_cd");
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.BLAZE_ROD;
     }
 }

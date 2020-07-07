@@ -8,6 +8,7 @@ import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.gameobjects.items.Controller;
 import com.roland.identityv.gameobjects.items.Wand;
 import com.roland.identityv.handlers.FreezeHandler;
+import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.SwingManager;
 import com.roland.identityv.managers.statusmanagers.VaultManager;
@@ -20,10 +21,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -59,6 +58,13 @@ public class HunterSwing {
                     return;
                 }
 
+                // If sword has enchantment
+                if (hunterP.getItemInHand() != null && hunterP.getItemInHand().getEnchantments().size() > 0) {
+                    foggyBlade(hunterP);
+                }
+
+                hunter.resetInvisTimer();
+
                 double lowestDistance = 100;
                 Entity closest = null;
 
@@ -91,10 +97,8 @@ public class HunterSwing {
                     hunterP.getWorld().strikeLightningEffect(hunterP.getLocation());
 
                     // Recover if not carrying a survivor TODO maybe make balloon hits different
-                    if (hunterP.getPassenger() == null) {
-                        Animations.falling_rings(hunterP.getLocation(), "animations.hunter", "hit_recovery", Config.getInt("timers.hunter", "hit_recovery"));
-                        AttackRecoveryManager.getInstance().add(hunterP, Config.getInt("timers.hunter", "hit_recovery"));
-                    }
+                    boolean isWand = false;
+
                     // Actual player
                     if (closest.getType() == EntityType.PLAYER) {
                         hunterP.sendMessage("Hit!");
@@ -109,22 +113,34 @@ public class HunterSwing {
                             }
                         }
 
-                        s.hit(2);
+                        if (hunter.hasDetention()) s.hit(hunter, 4);
+                        else s.hit(hunter,2);
+
                         if (s.getAction() != Action.NONE) { // Terror shock
                             s.clearActionRunnable(); // TODO maybe move this to survivor hit method for abilities?
                             s.getPlayer().getServer().broadcastMessage("Terror shock!");
                             s.getPlayer().sendTitle(ChatColor.RED + "Terror shock!", "");
                             hunter.getPlayer().sendTitle(ChatColor.RED + "Terror shock!", "");
-                            s.hit(2);
+                            s.hit(hunter,2);
                         }
                     } else {
                         // Villager
                         hunterP.sendMessage("Hit a clone!");
                         // If wand
-                        Wand.removeClone(closest.getEntityId(),closest.getLocation());
+                        if (Wand.removeClone(closest.getEntityId(),closest.getLocation())) {
+                            isWand = true;
+                        } else {
+                            Controller.getController(closest.getEntityId()).hit(hunter);
 
-                        Controller.getController(closest.getEntityId()).hit();
+                        }
                             //Controller.removeClone(closest.getEntityId(),closest.getLocation());
+                    }
+
+                    if (hunterP.getPassenger() == null && !isWand) {
+                        Animations.falling_rings(hunterP.getLocation(), "animations.hunter", "hit_recovery", Config.getInt("timers.hunter", "hit_recovery"));
+                        AttackRecoveryManager.getInstance().add(hunterP, Config.getInt("timers.hunter", "hit_recovery"));
+                    } else {
+                        AttackRecoveryManager.getInstance().add(hunterP, Config.getInt("timers.hunter", "miss_recovery"));
                     }
                 } else { // Add delay even if you didn't hit someone
                     Console.log("No hit.");
@@ -135,6 +151,43 @@ public class HunterSwing {
 
             }
         }.runTaskLater(plugin, Config.getInt("timers.hunter","swing_delay"));
+    }
+
+    private void foggyBlade(final Player p) {
+        Console.log("Summoned fireball");
+        //final SmallFireball proj = (SmallFireball) p.getWorld().spawnEntity(p.getLocation().add(p.getLocation().getDirection()), EntityType.SMALL_FIREBALL);
+        final SmallFireball proj = p.launchProjectile(SmallFireball.class);
+        //proj.teleport(p.getLocation().clone().add(0,1,0));
+        proj.setIsIncendiary(false);
+        proj.setBounce(false);
+        proj.setYield(0);
+
+        //proj.setVelocity(new Vector(0,0,0));
+
+        Vector dir = p.getLocation().getDirection();
+        //dir.setY(0);
+
+        proj.setVelocity(dir.multiply(0.6));
+        //proj.setDirection(eyeD.normalize().multiply(0.5));
+
+//        proj.teleport(new Location(proj.getWorld(), proj.getLocation().getX(), p.getLocation().getY() + 1.5, proj.getLocation().getZ()));
+//        //proj.setVelocity(p.getLocation().getDirection().setY(0).multiply(0.3));
+//        Vector dir = p.getLocation().getDirection().setY(0).multiply(0.3);
+//        proj.setDirection(dir);
+//        p.sendMessage("Sending at dir: "+dir);
+
+//        new BukkitRunnable() {
+//
+//            public void run() {
+//                if (proj.isDead()) {
+//                    cancel();
+//                    return;
+//                }
+//                proj.teleport(new Location(proj.getWorld(), proj.getLocation().getX(), p.getLocation().getY() + 1.5, proj.getLocation().getZ()));
+//            }
+//        }.runTaskTimer(plugin,0,1);
+        proj.setShooter(p);
+        HunterManager.getHunter(p).resetFoggyTimer();
     }
 
     private boolean isValidTarget(Entity en) {

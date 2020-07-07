@@ -37,7 +37,12 @@ public class EditSurvivorCommand extends PlayerCommand {
             }
 
             if (args[0].equalsIgnoreCase("add")) {
-                Player target = p.getServer().getPlayer(args[1]);
+                Player target = null;
+                try {
+                    target = p.getServer().getPlayer(args[1]);
+                } catch (Exception e) {
+                    return true;
+                }
                 if (SurvivorManager.isSurvivor(target)) return true;
 
                 if (HunterManager.isHunter(target)) HunterManager.removeHunter(target);

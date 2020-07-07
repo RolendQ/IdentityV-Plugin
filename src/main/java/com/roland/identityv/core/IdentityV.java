@@ -110,6 +110,7 @@ public class IdentityV extends JavaPlugin {
         new ItemManager(this);
         new DungeonManager(this);
         new CancelProtectionManager(this);
+        new ChestManager(this);
     }
 
     /**
@@ -151,6 +152,9 @@ public class IdentityV extends JavaPlugin {
         pm.registerEvents(new EntityDismountListener(this), this);
         pm.registerEvents(new PlayerQuitListener(this), this);
         pm.registerEvents(new EntityShootBowListener(this), this);
+        pm.registerEvents(new PlayerItemHeldListener(this), this);
+        pm.registerEvents(new PlayerPickupItemListener(this), this);
+        pm.registerEvents(new PlayerDropItemListener(this), this);
     }
 
     public Game getGame() {

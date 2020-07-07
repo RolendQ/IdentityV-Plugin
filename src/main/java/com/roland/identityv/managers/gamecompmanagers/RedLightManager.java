@@ -3,6 +3,7 @@ package com.roland.identityv.managers.gamecompmanagers;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.gameobjects.Hunter;
 import com.roland.identityv.gameobjects.items.Controller;
+import com.roland.identityv.utils.Config;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.command.ConsoleCommandSender;
@@ -38,7 +39,7 @@ public class RedLightManager {
                             // Light
                             for (int i = 0; i < 4; i++) {
                                 Location loc = new Location(hunterP.getWorld(),hunterP.getLocation().getX()+eyeD.getX(), hunterP.getLocation().getY()-0.8, hunterP.getLocation().getZ()+eyeD.getZ());
-                                p2.playEffect(loc, Effect.valueOf(plugin.getConfig().getString("light_effect").toUpperCase()), plugin.getConfig().getInt("light_data"));
+                                p2.playEffect(loc, Effect.valueOf(Config.getStr("animations.hunter","light").toUpperCase()), 1);
                                 eyeD.setX(eyeD.getX() * 1.5);
                                 eyeD.setZ(eyeD.getZ() * 1.5);
                             }

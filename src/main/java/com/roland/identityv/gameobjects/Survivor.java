@@ -3,18 +3,18 @@ package com.roland.identityv.gameobjects;
 import com.roland.identityv.actions.StruggleFree;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
+import com.roland.identityv.enums.Persona;
 import com.roland.identityv.enums.State;
+import com.roland.identityv.gameobjects.items.Controller;
 import com.roland.identityv.gameobjects.items.Item;
 import com.roland.identityv.handlers.SitHandler;
 import com.roland.identityv.managers.gamecompmanagers.*;
 import com.roland.identityv.managers.statusmanagers.CancelProtectionManager;
 import com.roland.identityv.managers.statusmanagers.freeze.AttackRecoveryManager;
+import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StruggleRecoveryManager;
 import com.roland.identityv.utils.*;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,10 +45,18 @@ public class Survivor {
     public double cipherProgressAtStart;
     public Survivor owner;
     public Location cloneLoc;
+    public Survivor healer;
+
+    public int[] personaWeb; // tracks if they have the persona and the cooldown
 
     public long lastHeartbeat;
     public int selfHeal;
     public int crowsTimer;
+
+    public Chest chest;
+    public boolean wasJustHit;
+    public int tideDuration;
+    public boolean hitUnderTide = false;
 
     public Survivor target; // for heal and rescue
     public Item item;
@@ -73,6 +81,8 @@ public class Survivor {
 
         this.owner = owner;
         this.cloneLoc = cloneLoc;
+
+        personaWeb = new int[]{0, 0, 0, 0}; // empty
     }
 
     public Survivor(IdentityV plugin, Player player, Game game) {
@@ -80,6 +90,7 @@ public class Survivor {
         this.player = player;
         this.game = game;
         this.target = null;
+        this.healer = null;
 
         actionRunnable = null;
         state = State.NORMAL;
@@ -90,6 +101,10 @@ public class Survivor {
         player.setFoodLevel(2);
         player.setSaturation(1000);
         player.setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
+        item = null;
+        player.setCanPickupItems(true);
+
+        personaWeb = new int[]{1, 1, 30, 30}; // default persona web
 
         lastHeartbeat = 0;
         struggleProgress = 0;
@@ -105,6 +120,9 @@ public class Survivor {
         armor = player.getInventory().getArmorContents();
     }
 
+    public Survivor getHealer() { return healer; }
+
+    public void setHealer(Survivor healer) { this.healer = healer; }
     public ItemStack[] getArmor() {
         return armor;
     }
@@ -120,6 +138,10 @@ public class Survivor {
 
     public int getBarLine() {
         return line-1;
+    }
+
+    public int[] getPersonaWeb() {
+        return personaWeb;
     }
 
     public Player getPlayer() {
@@ -157,12 +179,16 @@ public class Survivor {
 
     public void drop() {
         plugin.getServer().broadcastMessage(player.getDisplayName() + " was dropped");
-//        ScoreboardUtil.set("&e"+player.getDisplayName(), getNameLine());
-//        ScoreboardUtil.setBar((float)bleedOutTimer / (float) Config.getInt("timers.survivor","bleed"),"e",getBarLine());
+
         setState(State.INCAP);
-        struggleProgress += 3;
+        hunter = null;
+        struggleProgress += 6;
         player.setExp(0);
         SitHandler.unsit(player);
+    }
+
+    public void setStruggleProgress(int struggleProgress) {
+        this.struggleProgress = struggleProgress;
     }
 
     public Hunter getHunter() { return hunter; }
@@ -199,11 +225,12 @@ public class Survivor {
 //        ScoreboardUtil.setBar((float)bleedOutTimer / (float) Config.getInt("timers.survivor","bleed"),"e",getBarLine());
 
         Animations.decreasing_ring(player.getLocation(),"animations.survivor","incap",2,40);
-        player.removePotionEffect(PotionEffectType.SPEED); // remove any speed boost
+        //player.removePotionEffect(PotionEffectType.SPEED); // remove any speed boost
         plugin.getServer().broadcastMessage(player.getDisplayName() + " was incapacitated!");
 
         //IncapacitationManager.getInstance().add(player, 200); // 10 seconds for now
         healingProgress = 0;
+        struggleProgress = 0;
         player.setWalkSpeed((float) Config.getDouble("attributes.survivor","incap"));
         player.setHealth(1);
         state = State.INCAP;
@@ -222,6 +249,7 @@ public class Survivor {
     public int getAction() { return action; }
 
     public void setAction(int action) {
+        clearActionRunnable();
         this.action = action;
         // Cancel Protection
         CancelProtectionManager.getInstance().add(player,10);
@@ -267,7 +295,7 @@ public class Survivor {
     }
 
     public void incHealingProgress(int amount) {
-        incHealingProgress(amount, false);
+        incHealingProgress(amount, true);
     }
 
     public void incHealingProgress(int amount, boolean animate) {
@@ -286,22 +314,60 @@ public class Survivor {
         return (int) player.getHealth();
     }
 
-    public void hit(int damage) {
+    public void hit(Hunter h, final int damage) {
+        h.incPresence(damage);
         if (state != State.NORMAL) return; // chair
 
         healingProgress = 0; // Reset healing progress
 
-        // Incapacitate instead of vanilla dying
-        if (damage >= player.getHealth()) { // If they will die
-            player.damage(0.001); // for animation?
-            incapacitate();
-            return;
+        // Check for under tide
+        if (tideDuration > 0) {
+            h.getPlayer().sendTitle(ChatColor.RED + "Last Effort!", "");
+            player.sendTitle(ChatColor.RED + "Last Effort!", "");
+            hitUnderTide = true;
+            // Delay damage
+            new BukkitRunnable() {
+                public void run() {
+                    player.sendMessage("Your tide effect has worn off");
+                    if (damage >= player.getHealth()) { // If they will die
+                        player.damage(0.001); // for animation?
+                        incapacitate();
+                        return;
+                    }
+
+                    player.damage(damage);
+                }
+            }.runTaskLater(plugin, tideDuration * 20);
+
+
+        } else {
+            // Incapacitate instead of vanilla dying
+            if (damage >= player.getHealth()) { // If they will die
+                player.damage(0.001); // for animation?
+                incapacitate();
+                return;
+            }
+
+            player.damage(damage);
         }
 
-        player.damage(damage);
+        // If frozen, unfreeze
+        if (FreezeActionManager.getInstance().isFrozen(player)) {
+            FreezeActionManager.getInstance().remove(player);
+            player.setLevel(0);
+        }
+
+        // Brief invulnerability
+        wasJustHit = true;
+        new BukkitRunnable() {
+            public void run() {
+                wasJustHit = false;
+            }
+        }.runTaskLater(plugin, 10);
 
         // Speed boost
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Config.getInt("attributes.survivor","hit_boost_length"), 1, true, false),true);
+        increaseSpeed(0.7,50);
+        //player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Config.getInt("attributes.survivor","hit_boost_length"), 1, true, false),true);
     }
 
     public void startSelfHeal() {
@@ -348,20 +414,23 @@ public class Survivor {
         Console.log("Detected clone heal");
         setAction(Action.HEAL);
         clone.setAction(Action.GETHEAL); // Can't be injured because they are using bot
+        clone.setHealer(this);
+
+        injured.getPlayer().sendMessage("Your body is being healed");
 
         target = clone; // ?
 
-        final double progressAtStart = injured.getHealingProgress(); // May need to adjust this later
+        final double progressAtStart = clone.getHealingProgress(); // May need to adjust this later
 
         actionRunnable = new BukkitRunnable() {
             public void run() {
-                if (clone.getAction() != Action.GETHEAL) { // Player cleared it when switched back
-                    if (CalibrationManager.hasCalibration(Survivor.this)) {
-                        CalibrationManager.get(Survivor.this).finish();
-                    }
-                    clearActionRunnable();
-                    return;
-                }
+//                if (clone.getAction() != Action.GETHEAL) { // Player cleared it when switched back
+//                    if (CalibrationManager.hasCalibration(Survivor.this)) {
+//                        CalibrationManager.get(Survivor.this).finish();
+//                    }
+//                    clearActionRunnable();
+//                    return;
+//                }
 
                 clone.incHealingProgress(10, false); // Cancel particle effects
                 Animations.random(clone.getLocation(),"animations.survivor","heal",1.5,3);
@@ -385,8 +454,10 @@ public class Survivor {
                             CalibrationManager.get(Survivor.this).finish();
                         }
 
-                        injured.getPlayer().setHealth(injured.getPlayer().getHealth() + 2);
+                        injured.getPlayer().setHealth(injured.getPlayer().getHealth() + 2); // Increases health to be updated later
                         clone.setHealingProgress(0);
+                        injured.getPlayer().sendMessage("You have been healed");
+                        Console.log("Clone was healed!");
                         //injured.getPlayer().sendMessage("You have been healed");
                         clone.clearActionRunnable();
                         clearActionRunnable();
@@ -488,6 +559,10 @@ public class Survivor {
                 if (player.getExp() >= 1) { // Finished rescuing
                     RocketChairManager.getChair(chaired.getPlayer()).releaseSurvivor();
                     SitHandler.unsit(chaired.getPlayer());
+                    // Use tide
+                    if (personaWeb[Persona.TIDE_TURNER] > 0) {
+                        useTide(chaired);
+                    }
                     chaired.setAction(Action.NONE);
                     chaired.getPlayer().setHealth(2);
                     chaired.getPlayer().setWalkSpeed((float) Config.getDouble("attributes.survivor","walk"));
@@ -591,13 +666,24 @@ public class Survivor {
     }
 
     public boolean clearActionRunnable(boolean isBotSwitch) {
-        player.setExp(0);
-        setAction(Action.NONE);
-        if (!isBotSwitch && target != null) { // So switching from bot doesn't stop heal
-            target.clearActionRunnable();
-            target = null;
+        if (player != null)  player.setExp(0);
+
+        if (action == Action.OPENCHEST) {
+            if (!chest.isEmpty()) {
+                // Player tried to cancel
+                chest.animateOpenAndClose();
+                FreezeActionManager.getInstance().add(player, Config.getInt("timers.survivor", "open_and_close_chest_duration"));
+            }
+            chest.setOpener(null);
+            chest = null; // TODO needs testing with attacking
         }
+
+        action = Action.NONE;
         if (actionRunnable != null) {
+            if (!isBotSwitch && target != null) { // So switching from bot doesn't stop heal
+                target.clearActionRunnable(true);
+                target = null;
+            }
             actionRunnable.cancel();
             actionRunnable = null;
             return true;
@@ -620,6 +706,10 @@ public class Survivor {
         SurvivorManager.checkIfOver();
     }
 
+    public boolean wasJustHit() {
+        return wasJustHit;
+    }
+
     public Survivor getTarget() {
         return target;
     }
@@ -629,6 +719,14 @@ public class Survivor {
     }
 
     public void setItem(Item item) {
+        // Can only pick up if they have no item TODO needs fix
+        if (item == null) {
+            //player.sendMessage("You can pickup items now");
+            //player.setCanPickupItems(true);
+        } else {
+            //player.sendMessage("You cannot pickup items now");
+            //player.setCanPickupItems(false);
+        }
         this.item = item;
     }
 
@@ -639,5 +737,98 @@ public class Survivor {
     public double getCipherProgressAtStart() {
         return cipherProgressAtStart;
     }
+
+    public void startOpenChest(final Chest chest) {
+        setAction(Action.OPENCHEST);
+        Console.log("Start open chest");
+        chest.setOpener(this);
+        this.chest = chest;
+
+        // Freeze for 2 second
+        chest.animateOpenAndClose();
+        FreezeActionManager.getInstance().add(player,Config.getInt("timers.survivor","open_and_close_chest_duration"));
+
+        actionRunnable = new BukkitRunnable() {
+            public void run() {
+                chest.incProgress(10);
+                player.setExp((float) chest.getProgress() / (float) Config.getInt("timers.survivor","open_chest"));
+                if (player.getExp() >= 1) {
+                    chest.open();
+                    player.sendMessage("You have opened the chest");
+                    clearActionRunnable();
+                }
+            }
+        };
+        actionRunnable.runTaskTimer(plugin, Config.getInt("timers.survivor","open_and_close_chest_duration") + 5, 10);
+
+    }
+
+    // Returns if this survivor is actually a robot (can't be healed or open chests)
+    public boolean isControllingRobot() {
+        if (item != null && item instanceof Controller) {
+            Controller cont = (Controller) item;
+            if (cont.isRobot) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public void increaseSpeed(double percentage, int duration) {
+        Console.log("Increasing speed by "+percentage);
+        final double amount = Config.getDouble("attributes.survivor","walk") * percentage;
+        player.setWalkSpeed((float) (player.getWalkSpeed() + amount));
+        new BukkitRunnable() {
+            public void run() {
+                player.setWalkSpeed((float) (player.getWalkSpeed() - amount));
+            }
+        }.runTaskLater(plugin,duration);
+    }
+
+    public void boostsCD(final int boostType) {
+        personaWeb[boostType] = 0;
+        new BukkitRunnable() {
+            public void run() {
+                personaWeb[boostType]++;
+                if (personaWeb[boostType] == Config.getInt("attributes.survivor","boost_cd") / 20) {
+                    player.sendMessage("Your boost is now available!");
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin,0,20);
+    }
+
+    public int getTideDuration() {
+        return tideDuration;
+    }
+
+    public void setTideDuration(int tideDuration) {
+        this.tideDuration = tideDuration;
+    }
+
+    public void useTide(final Survivor rescued) {
+        Console.log("Using tide");
+        personaWeb[Persona.TIDE_TURNER] = 0;
+        tideDuration = Config.getInt("attributes.survivor","tide_length") / 20;
+        rescued.setTideDuration(tideDuration); // Manage rescued's tide duration too
+        new BukkitRunnable() {
+            public void run() {
+                tideDuration--;
+                rescued.setTideDuration(tideDuration);
+                if (tideDuration == 0) {
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin,0,20);
+    }
+
+    public boolean wasHitUnderTide() {
+        return hitUnderTide;
+    }
+
+//    public void setHitUnderTide(boolean hitUnderTide) {
+//        this.hitUnderTide = hitUnderTide;
+//    }
 }
 

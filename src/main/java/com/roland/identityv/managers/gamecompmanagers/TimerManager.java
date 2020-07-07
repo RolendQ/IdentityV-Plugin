@@ -45,7 +45,7 @@ public class TimerManager {
                             // Alert hunter
                             if (s.getCrowsTimer() % 16 == 0) {
                                 for (Hunter h : HunterManager.getHunters()) {
-                                    Holograms.alert(h.getPlayer(), s.getPlayer().getLocation());
+                                    Holograms.alert(h.getPlayer(), s.getPlayer().getLocation(), 40);
                                 }
                             }
                         }

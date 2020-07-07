@@ -25,6 +25,8 @@ public class DestroyPallet {
         this.plugin = plugin;
         final Player hunterP = hunter.getPlayer();
 
+        hunter.resetInvisTimer();
+
         int destroyPalletTimer = Config.getInt("timers.hunter","destroy_pallet");
         DestroyPalletManager.getInstance().add(hunterP, destroyPalletTimer);
 

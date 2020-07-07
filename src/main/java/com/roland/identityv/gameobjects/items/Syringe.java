@@ -7,6 +7,7 @@ import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -18,6 +19,11 @@ public class Syringe extends Item {
     }
 
     public boolean use() {
+        // Full health
+        if (p.getHealth() >= 4) {
+            return false;
+        }
+
         if (task != null) { // Cancel syringe
             stop();
             return true;
@@ -54,7 +60,7 @@ public class Syringe extends Item {
             }
         });
         task = s.getActionRunnable();
-        task.runTaskTimer(plugin, 5, 15); // slower
+        task.runTaskTimer(plugin, 5, Config.getInt("attributes.item","syringe_timer_speed")); // slower
         return true;
     }
 
@@ -63,5 +69,10 @@ public class Syringe extends Item {
         s.clearActionRunnable();
         task.cancel();
         task = null;
+    }
+
+    @Override
+    public Material getMat() {
+        return Material.SHEARS;
     }
 }

@@ -10,5 +10,6 @@ public class Action {
     public static final int SELFHEAL = 6;
     public static final int GETRESCUE = 7;
     public static final int OPEN = 8;
+    public static final int OPENCHEST = 9;
     // dismantling, rescuing, opening gate
 }
