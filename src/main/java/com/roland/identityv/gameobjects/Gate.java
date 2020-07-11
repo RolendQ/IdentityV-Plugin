@@ -17,13 +17,11 @@ public class Gate {
     // Maybe make this related to cipher through a parent class
     public Location loc; // points to keypad (tripwire hook)
     public int progress;
-    public IdentityV plugin;
     public Survivor opener; // Only one player can open it at a time
     // Game?
 
-    public Gate(IdentityV plugin, Location loc) {
+    public Gate(Location loc) {
         this.loc = loc;
-        this.plugin = plugin;
         this.progress = 0;
         this.opener = null;
     }
@@ -36,10 +34,6 @@ public class Gate {
     public void incProgress(int bit) {
         Animations.random(loc,"animations.survivor","decode",1.5,3);
         progress += bit;
-    }
-
-    public void notify(Player p) {
-        p.sendMessage("Gate Progress: "+progress);
     }
 
     public boolean isDone() {

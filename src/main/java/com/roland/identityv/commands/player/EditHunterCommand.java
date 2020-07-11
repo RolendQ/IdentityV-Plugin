@@ -29,7 +29,7 @@ public class EditHunterCommand extends PlayerCommand {
             if (args.length == 0) return true;
 
             if (args[0].equalsIgnoreCase("list")) {
-                String hunters = "Hunters: ";
+                String hunters = "[Hunter] List: ";
                 for (Hunter h : HunterManager.getHunters()) {
                     hunters += h.getPlayer().getDisplayName() + " ";
                 }
@@ -50,14 +50,14 @@ public class EditHunterCommand extends PlayerCommand {
 
                 HunterManager.addHunter(target);
 
-                p.sendMessage("Added: "+args[1]);
+                p.sendMessage("[Hunter] Added: "+args[1]);
                 return true;
             }
 
             if (args[0].equalsIgnoreCase("remove")) {
                 HunterManager.removeHunter(p.getServer().getPlayer(args[1]));
 
-                p.sendMessage("Removed: "+args[1]);
+                p.sendMessage("[Hunter] Removed: "+args[1]);
                 return true;
             }
         }

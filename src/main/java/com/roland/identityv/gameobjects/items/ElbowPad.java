@@ -31,6 +31,8 @@ public class ElbowPad extends Item {
                     useTime++;
                     if (useTime == 5) {
                         cancel();
+                        // TODO NEEDS TESTING? UNSURE IF BELOW LINE BREAKS STUFF
+                        task = null;
                         return;
                     }
                     // Dash

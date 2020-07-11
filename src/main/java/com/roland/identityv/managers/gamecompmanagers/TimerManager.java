@@ -9,7 +9,12 @@ import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.Holograms;
+import net.minecraft.server.v1_8_R3.DataWatcher;
+import net.minecraft.server.v1_8_R3.EntityPlayer;
+import net.minecraft.server.v1_8_R3.PacketPlayOutEntityDestroy;
+import net.minecraft.server.v1_8_R3.PacketPlayOutEntityMetadata;
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -51,13 +56,18 @@ public class TimerManager {
                         }
                     } else if (s.getState() == State.INCAP) {
                         s.incBleedOutTimer();
+
+                        s.getPlayer().setSneaking(true); // appear sneaking
                         // TODO for testing
                         //if (s.getBleedOutTimer() % 5 == 0) plugin.getServer().broadcastMessage(s.getPlayer().getDisplayName() + " is bleeding out: "+s.getBleedOutTimer());
                         if (s.getBleedOutTimer() == Config.getInt("timers.survivor","bleed")) s.death();
                     } else if (s.getState() == State.CHAIR) {
                         s.incChairTimer();
                         //if (s.getChairTimer() % 5 == 0) plugin.getServer().broadcastMessage(s.getPlayer().getDisplayName() + " is dying on chair: "+s.getChairTimer());
-                        if (s.getChairTimer() == Config.getInt("timers.survivor","chair")/2) s.incTimesOnChair();
+                        if (s.getChairTimer() == Config.getInt("timers.survivor","chair")/2) {
+                            s.incTimesOnChair();
+                            plugin.getServer().broadcastMessage(s.getPlayer().getDisplayName() + " passed half");
+                        }
                         if (s.getChairTimer() == Config.getInt("timers.survivor","chair")) {
                             RocketChairManager.getChair(s.getPlayer()).fly();
                             s.death();

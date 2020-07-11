@@ -16,6 +16,7 @@ import com.roland.identityv.utils.Holograms;
 import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.ConsoleCommandSender;
@@ -66,7 +67,8 @@ public class PlayerMoveListener implements Listener {
             if (!CancelProtectionManager.getInstance().isDoingTask(p)) { // Brief period where they can't cancel
                 s.setAction(Action.NONE); // Resets any healing/rescuing
                 if (s.clearActionRunnable()) {
-                    p.sendMessage("Cancelled");
+                    //p.sendMessage("Cancelled");
+                    p.playSound(p.getLocation(), Sound.NOTE_BASS,1,1);
                 }
             }
         } else if (HunterManager.isHunter(p)) {

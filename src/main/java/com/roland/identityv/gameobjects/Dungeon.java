@@ -13,12 +13,10 @@ import java.util.ArrayList;
 public class Dungeon {
     public Location loc;
     public ArrayList<Location> blockLocs;
-    public IdentityV plugin;
     public Game game;
 
     // Create this objects in game setup TODO make sure they don't overlap
-    public Dungeon(IdentityV plugin, Location loc, Game game) {
-        this.plugin = plugin;
+    public Dungeon(Location loc, Game game) {
         this.game = game;
         this.loc = loc;
         blockLocs = new ArrayList<Location>();

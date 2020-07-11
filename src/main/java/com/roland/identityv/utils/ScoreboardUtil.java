@@ -9,15 +9,13 @@ import org.bukkit.scoreboard.*;
  * Adjusting the scoreboard to display information about the game
  */
 public class ScoreboardUtil {
-    public static IdentityV plugin;
     public static ScoreboardManager sbm;
     public static Scoreboard sb;
     public static Objective ob;
     public static Team hiddenNames;
 
-    public ScoreboardUtil(IdentityV plugin) {
-        ScoreboardUtil.plugin = plugin;
-        sbm = plugin.getServer().getScoreboardManager();
+    public static void setup() {
+        sbm = IdentityV.plugin.getServer().getScoreboardManager();
         sb = sbm.getNewScoreboard();
         ob = sb.registerNewObjective("Display","");
         ob.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -61,7 +59,7 @@ public class ScoreboardUtil {
         }
         sc.setScore(line);
 
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
+        for (Player p : IdentityV.plugin.getServer().getOnlinePlayers()) {
             p.setScoreboard(sb);
         }
     }
@@ -87,12 +85,12 @@ public class ScoreboardUtil {
         set(createBar(percentage,color),line);
     }
 
-    public static void addNPCToTeam(String name) {
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
-            if (!hiddenNames.hasEntry(p.getDisplayName())) {
-                hiddenNames.addEntry(p.getDisplayName());
-            }
-        }
+    public static void addHiddenName(String name) {
+//        for (Player p : IdentityV.plugin.getServer().getOnlinePlayers()) {
+//            if (!hiddenNames.hasEntry(p.getDisplayName())) {
+//                hiddenNames.addEntry(p.getDisplayName());
+//            }
+//        }
         //Console.log("Adding to hiddenNames: "+name);
         hiddenNames.addEntry(name);
     }

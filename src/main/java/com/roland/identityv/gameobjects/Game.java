@@ -8,6 +8,7 @@ import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import com.roland.identityv.utils.Holograms;
 import com.roland.identityv.utils.ScoreboardUtil;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -34,13 +35,25 @@ public class Game {
 
     public void incCiphersDone() {
         ciphersDone++;
+        // Sound
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            p.playSound(p.getLocation(), Sound.ANVIL_LAND, 1, 0.5F);
+        }
 
-        if (ciphersDone == 2) {
+        if (ciphersDone == 2) { // Spawn dungeon
             plugin.getServer().broadcastMessage("Dungeon has spawned!");
+            SurvivorManager.checkIfOver(); // To open dungeon if needed
             DungeonManager.spawnRandom();
         }
 
-        if (ciphersDone >= 5) {
+        if (ciphersDone >= 5) { // Activate gates
+            // Sound
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
+                p.playSound(p.getLocation(), Sound.WOLF_HOWL, 1, 1.3F);
+            }
+            for (Hunter h : HunterManager.getHunters()) {
+                Holograms.alertSurvivors(h, 100);
+            }
             ScoreboardUtil.set("&eEXIT GATES ARE ACTIVE", 10);
             // Highlight exit gates (needs refresh)
             for (Gate g : GateManager.gates) {

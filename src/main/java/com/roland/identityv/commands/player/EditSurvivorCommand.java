@@ -28,7 +28,7 @@ public class EditSurvivorCommand extends PlayerCommand {
             if (args.length == 0) return true;
 
             if (args[0].equalsIgnoreCase("list")) {
-                String survivors = "Survivors: ";
+                String survivors = "[Survivor] List: ";
                 for (Survivor surv : SurvivorManager.getSurvivors()) {
                     survivors += surv.getPlayer().getDisplayName() + " ";
                 }
@@ -48,14 +48,14 @@ public class EditSurvivorCommand extends PlayerCommand {
                 if (HunterManager.isHunter(target)) HunterManager.removeHunter(target);
 
                 SurvivorManager.addSurvivor(target);
-                p.sendMessage("Added: "+args[1]);
+                p.sendMessage("[Survivor] Added: "+args[1]);
                 return true;
             }
 
             if (args[0].equalsIgnoreCase("remove")) {
                 SurvivorManager.removeSurvivor(p.getServer().getPlayer(args[1]));
 
-                p.sendMessage("Removed: "+args[1]);
+                p.sendMessage("[Survivor] Removed: "+args[1]);
                 return true;
             }
         }

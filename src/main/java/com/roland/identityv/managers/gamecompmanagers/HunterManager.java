@@ -27,7 +27,7 @@ public class HunterManager {
     }
 
     public static void addHunter(Player p) {
-        hunters.put(p, new Hunter(plugin,p,plugin.getGame()));
+        hunters.put(p, new Hunter(p,plugin.getGame()));
     }
 
     public static void removeHunter(Player p) {

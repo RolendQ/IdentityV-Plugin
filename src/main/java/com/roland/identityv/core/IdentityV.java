@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class IdentityV extends JavaPlugin {
-
+    public static IdentityV plugin;
     public FileConfiguration config;
     public Game testGame;
 
@@ -35,9 +35,11 @@ public class IdentityV extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        plugin = this;
+
         // Test game
 
-        new Console(this); // for debugging
+        //new Console(); // for debugging
 
         // Make sure natural regen is off
 
@@ -46,12 +48,7 @@ public class IdentityV extends JavaPlugin {
         registerCommands();
         registerListeners();
 
-        new Config(this); // for code efficiency
-        new Animations(this);
-        new XPBar(this);
-        new Holograms(this);
-        new ScoreboardUtil(this);
-        new NPCs(this);
+        ScoreboardUtil.setup(); // Initiate scoreboard display
 
         createTestGame(); // must be last
     }
@@ -111,6 +108,7 @@ public class IdentityV extends JavaPlugin {
         new DungeonManager(this);
         new CancelProtectionManager(this);
         new ChestManager(this);
+        new MapManager(this, this.getServer().getWorlds().get(0));
     }
 
     /**
@@ -133,6 +131,7 @@ public class IdentityV extends JavaPlugin {
         getCommand("debug").setExecutor(new DebugTestCommand(this));
         getCommand("map").setExecutor(new MapCommand(this));
         getCommand("hunter").setExecutor(new EditHunterCommand(this));
+        getCommand("game").setExecutor(new GameCommand(this));
     }
 
     /**

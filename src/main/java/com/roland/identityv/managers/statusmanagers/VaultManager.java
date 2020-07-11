@@ -19,11 +19,13 @@ public class VaultManager extends ActionManager {
 
     // For detecting multiple vaults
     public boolean hasNearbyVaults(Player attemptVaulter) {
+        if (isDoingTask(attemptVaulter)) return true; // Prevents themself from vaulting repeatedly too fast
+
         for (Entity en : attemptVaulter.getNearbyEntities(2.5,2.5,2.5)) {
             if (en instanceof Player) {
                 Player p = (Player) en;
                 if (isDoingTask(p)) {
-                    Console.log("Found nearby vaulter");
+                    //Console.log("Found nearby vaulter");
                     return true;
                 }
             }

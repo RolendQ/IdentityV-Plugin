@@ -3,10 +3,7 @@ package com.roland.identityv.gameobjects;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
-import org.bukkit.DyeColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,14 +17,13 @@ public class Cipher {
     public Location loc;
     public Block block;
     public int progress;
-    public IdentityV plugin;
     public Game game;
     public Location particlesLoc;
     public ArrayList<Survivor> survivorsDecoding;
+    public boolean popped = false;
 
-    public Cipher(IdentityV plugin, Location loc) {
+    public Cipher(Location loc) {
         this.loc = loc;
-        this.plugin = plugin;
         this.block = loc.getWorld().getBlockAt(loc);
         this.progress = 0;
         this.particlesLoc = new Location(loc.getWorld(), loc.getX(), loc.getY() + 1.1, loc.getZ());
@@ -35,9 +31,8 @@ public class Cipher {
         survivorsDecoding = new ArrayList<Survivor>();
     }
 
-    public Cipher(IdentityV plugin, Location loc, Game game) {
+    public Cipher(Location loc, Game game) {
         this.loc = loc;
-        this.plugin = plugin;
         this.block = loc.getWorld().getBlockAt(loc);
         this.progress = 0;
         this.particlesLoc = new Location(loc.getWorld(), loc.getX(), loc.getY() + 1.1, loc.getZ());
@@ -53,10 +48,13 @@ public class Cipher {
     public void incProgress(int bit) {
         Animations.random(particlesLoc,"animations.survivor","decode",1.5,3);
         progress += bit;
-    }
-
-    public void notify(Player p) {
-        p.sendMessage("Cipher Machine Progress: "+progress);
+        if (progress < (Config.getInt("timers.survivor","decode") / 3)) {
+            loc.getWorld().playSound(loc, Sound.NOTE_PIANO, 1, 0.5F);
+        } else if (progress < (Config.getInt("timers.survivor","decode") / 3) * 2) {
+            loc.getWorld().playSound(loc, Sound.NOTE_PIANO, 1, 1F);
+        } else {
+            loc.getWorld().playSound(loc, Sound.NOTE_PIANO, 1, 1.5F);
+        }
     }
 
     public boolean isDone() {
@@ -68,9 +66,13 @@ public class Cipher {
     }
 
     public void pop() {
-        Animations.random(particlesLoc,"animations.survivor","pop",1, 5);
-        game.incCiphersDone();
-        addBlackGlass();
+        if (!popped) { // To ensure duo decoding doesn't pop twice
+            Animations.random(particlesLoc, "animations.survivor", "pop", 1, 5);
+            loc.getWorld().playSound(loc, Sound.ANVIL_LAND, 1, 0.5F);
+            game.incCiphersDone();
+            addBlackGlass();
+            popped = true;
+        }
     }
 
     public void addBlackGlass() {

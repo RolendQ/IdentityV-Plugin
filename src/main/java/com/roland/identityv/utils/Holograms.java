@@ -1,6 +1,9 @@
 package com.roland.identityv.utils;
 
 import com.roland.identityv.core.IdentityV;
+import com.roland.identityv.gameobjects.Hunter;
+import com.roland.identityv.gameobjects.Survivor;
+import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -20,20 +23,13 @@ import java.util.Iterator;
  * Creating and deleting holograms
  */
 public class Holograms {
-    public static IdentityV plugin;
-    public static HashMap<Integer, String> entityIds;
-
-    public Holograms(IdentityV plugin) {
-        Holograms.plugin = plugin;
-        entityIds = new HashMap<Integer, String>();
-    }
+    public static HashMap<Integer, String> entityIds = new HashMap<Integer, String>();
 
     public static void alert(final Player player, final Location loc, int duration) {
-        player.playSound(player.getLocation(), Sound.ANVIL_LAND,1,0);
+        player.playSound(player.getLocation(), Sound.ANVIL_LAND,1,0.7F);
         //loc.getWorld().strikeLightningEffect(loc);
 
         EntityLightning lightning = new EntityLightning(((CraftWorld)player.getWorld()).getHandle(), loc.getX(), loc.getY(), loc.getZ());
-        //Console.log("lightning: "+lightning.getChunkCoordinates().toString());
         PacketPlayOutSpawnEntityWeather packet = new PacketPlayOutSpawnEntityWeather(lightning);
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
 
@@ -42,7 +38,16 @@ public class Holograms {
             public void run() {
                 delete(player);
             }
-        }.runTaskLater(plugin, duration);
+        }.runTaskLater(IdentityV.plugin, duration);
+    }
+
+    public static void alertSurvivors(Hunter hunter, int duration) {
+        for (Survivor s : SurvivorManager.getSurvivors()) {
+            // Alert everyone who is far enough away
+            if (s.getPlayer().getLocation().distance(hunter.getPlayer().getLocation())> 5) {
+                Holograms.alert(s.getPlayer(), hunter.getPlayer().getLocation(), duration);
+            }
+        }
     }
 
     public static void create(Player client, Location loc, String name) {

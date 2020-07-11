@@ -9,8 +9,6 @@ import org.bukkit.entity.Player;
 import java.util.Set;
 
 public class Adjustments {
-    public static IdentityV plugin;
-
     /**
      * Converts distance into a heart rate for survivor
      * @param distance
@@ -34,9 +32,5 @@ public class Adjustments {
 
     public static Location spawnBlock(World world, double x, double y, double z) {
         return new Location(world, x + 0.5, y + 2, z + 0.5);
-    }
-
-    public Adjustments(IdentityV plugin) {
-        this.plugin = plugin;
     }
 }

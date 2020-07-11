@@ -30,16 +30,22 @@ public class HeartbeatManager {
                 ConsoleCommandSender console = plugin.getServer().getConsoleSender();
 
                 // Shows only for the respective survivor
-                for (Survivor s : SurvivorManager.getSurvivors()) {
+                for (final Survivor s : SurvivorManager.getSurvivors()) {
                     for (Hunter h : HunterManager.getHunters()) {
-                        double distance = s.getPlayer().getLocation().distance(h.getPlayer().getLocation());
+                        final double distance = s.getPlayer().getLocation().distance(h.getPlayer().getLocation());
 
-                        Location loc = s.getPlayer().getLocation().add(0, 2, 0);
+                        final Location loc = s.getPlayer().getLocation().add(0, 2, 0);
 
                         long currentTime = h.getPlayer().getWorld().getTime();
                         if (currentTime - s.getLastHeartbeat() > Adjustments.getHeartRate(distance)) {
                             try {
-                                s.getPlayer().playSound(loc, Sound.BLAZE_HIT, (float) ((100 - (4 * distance)) / 100), 1);
+                                // Heartbeat sound
+                                s.getPlayer().playSound(loc, Sound.BLAZE_HIT, (float) ((100 - (4 * distance)) / 100), 0.8F);
+                                new BukkitRunnable() {
+                                    public void run() {
+                                        s.getPlayer().playSound(loc, Sound.BLAZE_HIT, (float) ((100 - (4 * distance)) / 100), 0.5F);
+                                    }
+                                }.runTaskLater(plugin,5);
                                 s.setLastHeartbeat(currentTime);
                                 String effect = plugin.getConfig().getConfigurationSection("animations").getConfigurationSection("survivor").getString("heartbeat").toUpperCase();
                                 s.getPlayer().playEffect(loc, Effect.valueOf(effect), 1);

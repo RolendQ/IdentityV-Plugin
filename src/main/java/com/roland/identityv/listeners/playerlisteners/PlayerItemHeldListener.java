@@ -24,7 +24,7 @@ public class PlayerItemHeldListener implements Listener {
         if (SurvivorManager.isSurvivor(e.getPlayer())) {
             Survivor s = SurvivorManager.getSurvivor(e.getPlayer());
 
-            if (s.getItem() != null) {
+            if (s.getItem() != null && e.getNewSlot() != 0) {
                 //e.getPlayer().sendMessage("Cancelled hand slot change");
                 e.setCancelled(true);
             }

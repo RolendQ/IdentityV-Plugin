@@ -19,7 +19,7 @@ public class ChestManager {
     public static HashSet<Chest> chests;
 
     public static void add(Location loc) {
-        chests.add(new Chest(plugin, loc));
+        chests.add(new Chest(loc));
     }
 
     public static void remove(Location loc) {
@@ -36,7 +36,7 @@ public class ChestManager {
         }
         //return null;
         Console.log("Created new chest");
-        Chest newChest = new Chest(plugin,loc);
+        Chest newChest = new Chest(loc);
         chests.add(newChest);
         return newChest;
     }

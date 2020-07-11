@@ -11,12 +11,6 @@ import java.util.Random;
  * Plays the particle effects in a given pattern
  */
 public class Animations {
-    public static IdentityV plugin;
-
-    public Animations(IdentityV plugin) {
-        Animations.plugin = plugin;
-    }
-
     public static void one(Location loc, String path, String key) {
         try {
             String effect = Config.getStr(path,key).toUpperCase();
@@ -143,7 +137,7 @@ public class Animations {
                     }
                     timer[0] -= 10;
                 }
-            }.runTaskTimer(plugin, 0, 10);
+            }.runTaskTimer(IdentityV.plugin, 0, 10);
         } catch (Exception e) {
 
         }
@@ -174,7 +168,7 @@ public class Animations {
                     }
                     timer[0] -= 10;
                 }
-            }.runTaskTimer(plugin, 0, 10);
+            }.runTaskTimer(IdentityV.plugin, 0, 10);
         } catch (Exception e) {
 
         }

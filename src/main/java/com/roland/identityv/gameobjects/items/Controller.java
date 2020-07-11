@@ -1,6 +1,8 @@
 package com.roland.identityv.gameobjects.items;
 
-import com.roland.identityv.actions.MissCalibration;
+import com.roland.identityv.actions.progress.Decode;
+import com.roland.identityv.actions.progress.Heal;
+import com.roland.identityv.actions.progress.OpenGate;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
@@ -60,7 +62,7 @@ public class Controller extends Item {
         this.robotsTask = null;
         this.injured = null;
         this.robotGate = null;
-        this.robotPlaceholder = new Survivor(plugin, s, entityLoc, s.game);
+        this.robotPlaceholder = new Survivor(s, entityLoc, s.game);
         this.survivorHealth = p.getHealth();
     }
 
@@ -210,8 +212,10 @@ public class Controller extends Item {
                 robotPlaceholder.clearActionRunnable(true);
                 if (robotPlaceholder.getHealer() == null) {
                     Console.log("Healer is null");
-                } else if (robotPlaceholder.getHealer() != s) // Stop healing yourself
-                    robotPlaceholder.getHealer().startHeal(s); // Start healing again
+                } else if (robotPlaceholder.getHealer() != s) {// Stop healing yourself
+                    Heal heal = new Heal(robotPlaceholder.getHealer());
+                    heal.startHeal(s); // Start healing again
+                }
             }
 
 
@@ -264,7 +268,7 @@ public class Controller extends Item {
             if (robotsTask != null) {
                 Console.log("Taking robot's task");
                 if (robotsAction == Action.DECODE) {
-                    s.startDecode(robotCipher, cipherProgressAtStart); // decode with robot's start progress
+                    new Decode(s,robotCipher, cipherProgressAtStart); // decode with robot's start progress
 
                     // Transfer any existing calibration
                     if (CalibrationManager.hasCalibration(robotPlaceholder) && !CalibrationManager.get(robotPlaceholder).getBeingRemoved()) {
@@ -272,9 +276,10 @@ public class Controller extends Item {
                         CalibrationManager.get(robotPlaceholder).setSurvivor(s);
                     }
                 } else if (robotsAction == Action.HEAL) {
-                    s.startHeal(injured); // continue healing
+                    Heal heal = new Heal(s);
+                    heal.startHeal(injured); // continue healing
                 } else if (robotsAction == Action.OPEN) {
-                    s.startOpen(robotGate);
+                    new OpenGate(s,robotGate);
                 }
                 clearRobotTask();
             }
@@ -363,14 +368,14 @@ public class Controller extends Item {
 
         } else {
             // Remove any calibrations because bot died
-            CalibrationManager.removeAfterDelay(robotPlaceholder);
+            CalibrationManager.removeAfterDelay(robotPlaceholder); // TODO doesn't seem to work effectivel?
         }
 
         Controller.removeClone(villagerID, entityLoc);
         entityLoc = null;
 
         // Durability
-        ItemStack itemStack = p.getItemInHand(); // TODO if not controller, cancel
+        ItemStack itemStack = p.getItemInHand(); // TODO make sure is controller
 
         if (itemStack != null && itemStack.getDurability() < itemStack.getType().getMaxDurability()) {
             int newDur = itemStack.getDurability() + 20 * Config.getInt("attributes.item", "controller_durability");
@@ -391,7 +396,7 @@ public class Controller extends Item {
             if (en.getEntityId() == villagerID) {
                 loc.getWorld().getBlockAt(loc).setType(Material.AIR);
                 en.remove();
-                for (Player p : Console.plugin.getServer().getOnlinePlayers()) { // TODO plugin weird
+                for (Player p : IdentityV.plugin.getServer().getOnlinePlayers()) {
                     final PlayerConnection connection = ((CraftPlayer) p).getHandle().playerConnection;
                     PacketPlayOutEntityDestroy pa = new PacketPlayOutEntityDestroy(clones.get(villagerID));
                     connection.sendPacket(pa);

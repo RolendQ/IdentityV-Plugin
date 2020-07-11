@@ -5,7 +5,9 @@ import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.managers.gamecompmanagers.ItemManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.utils.Console;
+import com.roland.identityv.utils.ItemUtil;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -39,32 +41,40 @@ public class PlayerPickupItemListener implements Listener {
             }
 
             if (ItemManager.isItem(e.getItem().getItemStack().getType())) {
-                e.getPlayer().sendMessage("Picked up item: "+e.getItem().getItemStack().getType());
-                // One
+                //e.getPlayer().sendMessage("Picked up item: "+e.getItem().getItemStack().getType());
+                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ORB_PICKUP,1,1);
+                // No item yet
                 if (s.getItem() == null) {
                     ItemManager.setItem(e.getItem().getItemStack().getType(),s);
-                    // Check for double (stacks all)
-                    new BukkitRunnable() {
-                        public void run() {
-                            // Counts copies of that material and puts total into hand
-                            PlayerInventory inv = e.getPlayer().getInventory();
-                            Material mat = e.getPlayer().getItemInHand().getType();
-                            int total = 0;
-                            for (ItemStack stack : inv.getContents()) {
-                                if (stack != null && stack.getType() == mat) {
-                                    total += stack.getAmount();
+                    // Check for stacking
+                    if (ItemManager.isStackable(e.getItem().getItemStack().getType())) {
+                        new BukkitRunnable() {
+                            public void run() {
+                                // Counts copies of that material and puts total into hand
+                                PlayerInventory inv = e.getPlayer().getInventory();
+                                Material mat = e.getPlayer().getItemInHand().getType();
+                                int total = 0;
+                                for (ItemStack stack : inv.getContents()) {
+                                    if (stack != null && stack.getType() == mat) {
+                                        total += stack.getAmount();
+                                    }
                                 }
+                                inv.remove(mat);
+                                //e.getPlayer().setItemInHand(new ItemStack(mat,total));
+                                e.getPlayer().setItemInHand(ItemUtil.create(mat, total));
                             }
-                            inv.remove(mat);
-                            e.getPlayer().setItemInHand(new ItemStack(mat,total));
-                        }
-                    }.runTaskLater(plugin,5);
+                        }.runTaskLater(plugin, 5);
+                    }
                 }
-                // Stack
-                else {
+                // Player has an item already
+
+                // Stack if stackable
+                else if (ItemManager.isStackable(e.getItem().getItemStack().getType())) {
                     e.setCancelled(true);
                     e.getItem().remove();
                     e.getPlayer().getItemInHand().setAmount(e.getPlayer().getItemInHand().getAmount() + 1);
+                } else {
+                    e.setCancelled(true); // Doesn't stack
                 }
             }
         }

@@ -8,12 +8,6 @@ import org.bukkit.scheduler.BukkitRunnable;
  * Uses the xpbar as a progress bar
  */
 public class XPBar {
-    public static IdentityV plugin;
-
-    public XPBar(IdentityV plugin) {
-        XPBar.plugin = plugin;
-    }
-
     public static void decreasing(final Player p, final long ticks) {
         final long start = p.getWorld().getTime();
         new BukkitRunnable() {
@@ -24,6 +18,6 @@ public class XPBar {
                 }
                 p.setExp(1F - ((float) diff / (float) ticks));
             }
-        }.runTaskTimer(plugin, 0, 1);
+        }.runTaskTimer(IdentityV.plugin, 0, 1);
     }
 }

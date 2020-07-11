@@ -6,6 +6,7 @@ import com.roland.identityv.gameobjects.Calibration;
 import com.roland.identityv.gameobjects.Survivor;
 import com.roland.identityv.utils.Console;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -23,11 +24,12 @@ public class CalibrationManager {
 
     public static void give(Survivor survivor, int type) {
         Player p = survivor.getPlayer();
-        Calibration c = new Calibration(plugin, survivor, type);
+        Calibration c = new Calibration(survivor, type);
         calibrations.put(survivor, c);
         // Only for survivors
         if (survivor.getPlayer() != null) {
-            p.sendTitle("Calibration", "" + c.getGoal()); // sometimes players don't see it?
+            p.playSound(p.getLocation(), Sound.NOTE_PLING, 1, 2);
+            p.sendTitle("Calibration", "" + c.getGoal()); // sometimes players don't see it? TODO
             p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Calibration: " + ChatColor.YELLOW + c.getGoal());
         } else {
             Console.log("Gave robot a calibration");

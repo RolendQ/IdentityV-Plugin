@@ -1,18 +1,15 @@
 package com.roland.identityv.listeners.playerlisteners;
 
-import com.roland.identityv.actions.BalloonPlayer;
+import com.roland.identityv.actions.animated.BalloonPlayer;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
-import com.roland.identityv.gameobjects.items.Controller;
 import com.roland.identityv.handlers.FreezeHandler;
-import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.ItemManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.utils.Console;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -66,8 +63,8 @@ public class PlayerInteractEntityListener implements Listener {
             // HUNTER
             if (HunterManager.isHunter(e.getPlayer())) {
                 // BALLOON
-                if (s.getState() == State.INCAP && clickedP.getVehicle() == null) {
-                    new BalloonPlayer(plugin, HunterManager.getHunter(p), s);
+                if (s.getState() == State.INCAP && s.getAction() != Action.GETHEAL &&  clickedP.getVehicle() == null) { // Make sure they are not being healed
+                    new BalloonPlayer(HunterManager.getHunter(p), s);
                 }
             // SURVIVOR
             } else {

@@ -12,15 +12,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class NPCs {
-    public static IdentityV plugin;
-
-    public NPCs(IdentityV plugin) {
-        this.plugin = plugin;
-    }
 
     public static EntityPlayer spawnNPC(Player p, Location location) {
-        MinecraftServer server = ((CraftServer) plugin.getServer()).getServer();
-        WorldServer world = ((CraftWorld) plugin.getServer().getWorlds().get(0)).getHandle();
+        MinecraftServer server = ((CraftServer) IdentityV.plugin.getServer()).getServer();
+        WorldServer world = ((CraftWorld) IdentityV.plugin.getServer().getWorlds().get(0)).getHandle();
         final EntityPlayer npc = new EntityPlayer(server,
                 world,
                 new GameProfile(p.getUniqueId(),
@@ -28,7 +23,7 @@ public class NPCs {
                 new PlayerInteractManager(world));
 
         npc.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
-        ScoreboardUtil.addNPCToTeam(npc.displayName);
+        ScoreboardUtil.addHiddenName(npc.displayName);
 
         ItemStack feet = CraftItemStack.asNMSCopy(p.getInventory().getBoots());
         ItemStack legs = CraftItemStack.asNMSCopy(p.getInventory().getLeggings());
@@ -36,7 +31,7 @@ public class NPCs {
         ItemStack head = CraftItemStack.asNMSCopy(p.getInventory().getHelmet());
         ItemStack hand = CraftItemStack.asNMSCopy(p.getInventory().getItemInHand());
 
-        for (Player pl : plugin.getServer().getOnlinePlayers()) {
+        for (Player pl : IdentityV.plugin.getServer().getOnlinePlayers()) {
             final PlayerConnection connection = ((CraftPlayer)pl).getHandle().playerConnection;
             connection.sendPacket(new PacketPlayOutNamedEntitySpawn(npc));
             connection.sendPacket(new PacketPlayOutEntityEquipment(npc.getId(), 4, head));

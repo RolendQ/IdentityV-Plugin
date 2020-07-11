@@ -1,5 +1,6 @@
 package com.roland.identityv.utils;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -47,6 +48,17 @@ public class PlayerUtil {
             if (decZ < -0.69 && b.getRelative(BlockFace.NORTH).getType().isSolid()) return true;
         }
         return false;
+    }
+
+    public static Player isTouchingAnotherPlayer(Player p) {
+        for (Player other : p.getServer().getOnlinePlayers()) {
+            if (other != p && other.getGameMode() == GameMode.SURVIVAL) {
+                if (other.getLocation().distance(p.getLocation()) < 1) {
+                    return other;
+                }
+            }
+        }
+        return null;
     }
 
     public static boolean hasInvisEffect(Player p) {

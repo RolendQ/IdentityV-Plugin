@@ -32,7 +32,7 @@ public class CipherManager {
     public static HashSet<Cipher> ciphers;
 
     public static void add(Location loc) {
-        ciphers.add(new Cipher(plugin, loc, plugin.getGame()));
+        ciphers.add(new Cipher(loc, plugin.getGame()));
     }
 
     public static void remove(Location loc) {
@@ -56,7 +56,7 @@ public class CipherManager {
         }
         //return null;
         Console.log("Created new cipher");
-        Cipher newCipher = new Cipher(plugin,loc, plugin.getGame());
+        Cipher newCipher = new Cipher(loc, plugin.getGame());
         ciphers.add(newCipher);
         return newCipher;
     }

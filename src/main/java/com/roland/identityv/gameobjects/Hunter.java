@@ -6,12 +6,10 @@ import com.roland.identityv.handlers.SitHandler;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.managers.statusmanagers.freeze.StruggleRecoveryManager;
-import com.roland.identityv.utils.Animations;
-import com.roland.identityv.utils.Config;
-import com.roland.identityv.utils.Console;
-import com.roland.identityv.utils.ScoreboardUtil;
+import com.roland.identityv.utils.*;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -19,12 +17,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 /**
  * Very simple hunter class
  */
 public class Hunter {
-    public IdentityV plugin;
     public Player player;
     public Game game;
     public int presence;
@@ -32,10 +30,11 @@ public class Hunter {
     public BukkitRunnable invisTask;
     public int foggyTimer;
     public boolean hasDetention = false;
+
+    public IdentityV plugin = IdentityV.plugin;
     // Maybe add character here
 
-    public Hunter(IdentityV plugin, Player player, Game game) {
-        this.plugin = plugin;
+    public Hunter(Player player, Game game) {
         this.player = player;
         this.game = game;
         this.presence = 0;
@@ -45,6 +44,7 @@ public class Hunter {
         player.setHealth(20);
         player.setFoodLevel(2);
         player.setSaturation(1000);
+        player.setCanPickupItems(false);
 
         player.setWalkSpeed((float) Config.getDouble("attributes.hunter","walk"));
     }
@@ -62,7 +62,7 @@ public class Hunter {
         if (presence > 10) presence = 10; // can't exceed 10
 
         if (presence != prevPresence) {
-            player.sendMessage("Presence increased: "+presence);
+            //player.sendMessage("Presence increased: "+presence);
             player.sendTitle(ChatColor.translateAlternateColorCodes('&',ScoreboardUtil.createBar(((float) presence) / 10,"6")),"");
         }
 
@@ -124,20 +124,34 @@ public class Hunter {
         return player;
     }
 
-    public void stun(int duration) {
+    // Pallet, flare gun, football
+    public void stun(final int duration) {
         // TODO consider adding this as an action object
         Animations.falling_rings(player.getLocation().add(0,1,0),"animations.hunter","stun_recovery", duration);
         FreezeActionManager.getInstance().add(player, duration);
 
         resetInvisTimer();
 
+        // Appear sneaking
+        final int[] sneakTimer = {0};
+        new BukkitRunnable() {
+            public void run() {
+                player.setSneaking(true);
+                sneakTimer[0]++;
+                if (sneakTimer[0] == duration) {
+                    player.setSneaking(false);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
+
         // If holding survivor
         if (player.getPassenger() != null) {
             final Survivor s = SurvivorManager.getSurvivor((Player) player.getPassenger());
             plugin.getServer().broadcastMessage(s.getPlayer().getDisplayName() + " was freed!");
 
-            player.setExp(0);
-            SitHandler.unsit(player);
+            s.getPlayer().setExp(0);
+            SitHandler.unsit(s.getPlayer());
             s.setHunter(null);
 
             new BukkitRunnable() {
@@ -147,7 +161,7 @@ public class Hunter {
                     s.getPlayer().setHealth(2);
                     s.setState(State.NORMAL);
                 }
-            }.runTaskLater(plugin, 30); // Must add a delay or else they don't get dismounted
+            }.runTaskLater(plugin, 20); // Must add a delay or else they don't get dismounted
         }
     }
 
@@ -181,7 +195,7 @@ public class Hunter {
                 itemStack.setDurability((short) newDur);
                 //player.updateInventory();
                 if (itemStack.getDurability() <= 0) {
-                    if (player.getItemInHand() != null) {
+                    if (player.getItemInHand().getType() == Material.GOLD_SWORD) {
                         player.getItemInHand().addEnchantment(Enchantment.FIRE_ASPECT,1);
                     }
                     cancel();
@@ -197,5 +211,27 @@ public class Hunter {
 
     public void setDetention(boolean hasDetention) {
         this.hasDetention = hasDetention;
+    }
+
+    // Football :)
+    public void push(final Vector direction, final int useTime) {
+        Console.log("Pushing "+player.getDisplayName()+ " for "+useTime+" at "+direction.toString());
+        final int[] useTimer = {0};
+        new BukkitRunnable() {
+            public void run() {
+                player.setVelocity(direction);
+                useTimer[0]++;
+                if (useTimer[0] == useTime) cancel();
+                if (PlayerUtil.isTouchingWall(player)) {
+                    // Stun
+                    int stunTime = (int) (useTime * Config.getDouble("attributes.item","football_stun_multiplier"));
+                    player.getServer().broadcastMessage("Hunter was stunned with football for "+stunTime);
+                    player.setVelocity(new Vector(0,0,0));
+                    stun(stunTime);
+                    cancel();
+                    return;
+                }
+            }
+        }.runTaskTimer(plugin,0,1);
     }
 }

@@ -32,14 +32,14 @@ public class GateManager {
         }
         // If not found, setup new gate
         Console.log("Created new gate");
-        Gate newGate = new Gate(plugin,loc);
+        Gate newGate = new Gate(loc);
         gates.add(newGate);
         return newGate;
     }
 
     public static void add(Location loc) {
         Console.log("Created new gate at start");
-        Gate newGate = new Gate(plugin,loc);
+        Gate newGate = new Gate(loc);
         gates.add(newGate);
     }
 

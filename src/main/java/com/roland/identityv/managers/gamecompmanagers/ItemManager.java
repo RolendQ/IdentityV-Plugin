@@ -87,4 +87,8 @@ public class ItemManager {
             }
         }.runTaskTimer(plugin, 0, 20);
     }
+
+    public static boolean isStackable(Material mat) {
+        return mat == Material.IRON_CHESTPLATE || mat == Material.GOLD_CHESTPLATE || mat == Material.BLAZE_ROD;
+    }
 }

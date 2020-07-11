@@ -11,15 +11,8 @@ import java.util.List;
  * Edit and retrieve from the config
  */
 public class Config {
-    public static IdentityV plugin;
-    public static FileConfiguration config;
-    public static FileConfiguration mapConfig;
-
-    public Config(IdentityV plugin) {
-        Config.plugin = plugin;
-        config = plugin.getConfig();
-        mapConfig = plugin.getMapConfig();
-    }
+    public static FileConfiguration config = IdentityV.plugin.getConfig();
+    public static FileConfiguration mapConfig = IdentityV.plugin.getMapConfig();
 
     public static void set(String key, String value) {
         // Int

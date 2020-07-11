@@ -1,6 +1,7 @@
 package com.roland.identityv.listeners.entitylisteners;
 
-import com.roland.identityv.actions.HunterSwing;
+import com.roland.identityv.actions.animated.HunterSwing;
+import com.roland.identityv.actions.progress.Heal;
 import com.roland.identityv.core.IdentityV;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.gameobjects.Survivor;
@@ -10,20 +11,15 @@ import com.roland.identityv.handlers.FreezeHandler;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
 import com.roland.identityv.managers.gamecompmanagers.HunterManager;
 import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
-import com.roland.identityv.managers.statusmanagers.freeze.AttackRecoveryManager;
-import com.roland.identityv.managers.statusmanagers.freeze.FreezeActionManager;
 import com.roland.identityv.utils.Animations;
 import com.roland.identityv.utils.Config;
 import com.roland.identityv.utils.Console;
 import org.bukkit.Material;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class EntityDamageByEntityListener implements Listener {
@@ -54,7 +50,7 @@ public class EntityDamageByEntityListener implements Listener {
                 // Hunter swing
                 if (HunterManager.isHunter(p)) {
                     if (p.getItemInHand() != null && p.getItemInHand().getType() == Material.GOLD_SWORD) {
-                        new HunterSwing(plugin, HunterManager.getHunter(p));
+                        new HunterSwing(HunterManager.getHunter(p));
                         e.setCancelled(true);
                         return;
                     }
@@ -73,7 +69,7 @@ public class EntityDamageByEntityListener implements Listener {
                         return;
                     }
 
-                    // HEALING CLONE
+                    // HEALING CLONE (Survivor is using robot)
                     if (e.getEntityType() == EntityType.VILLAGER) {
                         Controller c = Controller.getController(e.getEntity().getEntityId());
 
@@ -87,10 +83,11 @@ public class EntityDamageByEntityListener implements Listener {
                             Console.log("Found owner of robot: "+clickedS.getPlayer().getDisplayName());
 
                             // HEAL
-                            if (s.getState() == State.NORMAL ||
-                                    s.getState() == State.INCAP) {
-                                if (s.getPlayer().getHealth() < 4) {
-                                    s.startCloneHeal(robotPlaceholder,clickedS); // Stops self healing automatically
+                            if (clickedS.getState() == State.NORMAL ||
+                                    clickedS.getState() == State.INCAP) {
+                                if (clickedS.getPlayer().getHealth() < 4) {
+                                    Heal heal = new Heal(s);
+                                    heal.startCloneHeal(robotPlaceholder,clickedS); // Stops self healing automatically
                                     return;
                                 }
                             }
@@ -102,13 +99,14 @@ public class EntityDamageByEntityListener implements Listener {
 
                     Survivor clickedS = SurvivorManager.getSurvivor((Player) e.getEntity());
 
-                    if (clickedS.isControllingRobot()) return;
+                    if (clickedS.isControllingRobot()) return; // TODO not sure if intended. This should prevent healing robots?
 
                     // HEAL
-                    if (s.getState() == State.NORMAL ||
-                            s.getState() == State.INCAP) {
-                        if (s.getHealth() < 4) {
-                            s.startHeal(clickedS); // Stops self healing automatically
+                    if (clickedS.getState() == State.NORMAL ||
+                            clickedS.getState() == State.INCAP) {
+                        if (clickedS.getHealth() < 4) {
+                            Heal heal = new Heal(s);
+                            heal.startHeal(clickedS); // Stops self healing automatically
                             return;
                         }
                     }
@@ -172,7 +170,7 @@ public class EntityDamageByEntityListener implements Listener {
                 // Villager
                 Player hunterP = (Player) smallFireball.getShooter();
 
-                hunterP.sendMessage("Hit a clone with fireball!");
+                //hunterP.sendMessage("Hit a clone with fireball!");
                 Entity en = e.getEntity();
                 // If wand
                 if (Wand.removeClone(en.getEntityId(),en.getLocation())) {

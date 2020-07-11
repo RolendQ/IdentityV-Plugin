@@ -29,7 +29,7 @@ public class RocketChairManager {
         }
         // If not found, setup new chair
         Console.log("Created new rocket chair");
-        RocketChair newChair = new RocketChair(loc,plugin);
+        RocketChair newChair = new RocketChair(loc);
         chairs.add(newChair);
         return newChair;
     }

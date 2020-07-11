@@ -15,13 +15,11 @@ import org.bukkit.entity.Player;
  */
 public class RocketChair {
     public Location loc;
-    public IdentityV plugin;
     public Player survivor;
     public boolean isUsed;
 
-    public RocketChair(Location loc, IdentityV plugin) {
+    public RocketChair(Location loc) {
         this.loc = loc;
-        this.plugin = plugin;
         this.survivor = null;
         this.isUsed = false;
     }
@@ -29,11 +27,13 @@ public class RocketChair {
     public void setSurvivor(Player survivor) {
         this.survivor = survivor;
         Console.log("Set survivor: "+survivor.getName());
-        SitHandler.sit(survivor,loc.add(0.5, 1, 0.5));
+        //SitHandler.sit(survivor,loc.add(0.5, 0, 0.5));
+        // TODO make it look like they are sitting
+        SitHandler.fakeSit(survivor,loc.add(0.5, 0, 0.5));
         Console.log("Sitting on chair");
     }
 
-    public void releaseSurvivor() {
+    public void resetSurvivor() {
         this.survivor = null;
     }
 

@@ -1,12 +1,11 @@
 package com.roland.identityv.gameobjects;
 
-import com.roland.identityv.actions.MissCalibration;
+import com.roland.identityv.actions.animated.MissCalibration;
 import com.roland.identityv.core.IdentityV;
-import com.roland.identityv.enums.Action;
 import com.roland.identityv.enums.State;
 import com.roland.identityv.managers.gamecompmanagers.CalibrationManager;
-import com.roland.identityv.managers.gamecompmanagers.SurvivorManager;
 import com.roland.identityv.utils.Console;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -22,16 +21,15 @@ public class Calibration {
 
     public boolean beingRemoved = false;
 
-    public IdentityV plugin;
-
-    public Calibration(final IdentityV plugin, Survivor survivor, final int type) {
+    public Calibration(Survivor survivor, final int type) {
         this.player = survivor.getPlayer();
         this.survivor = survivor;
-        this.plugin = plugin;
         this.type = type;
         progress = 0;
         Random r = new Random();
         goal = (4 + r.nextInt(5)) * 10; // 40 to 80
+
+        // Timer: increase calibration progress
         task = new BukkitRunnable() {
             public void run() {
                 // If no longer normal state or no longer decoding
@@ -42,26 +40,26 @@ public class Calibration {
                     finish();
                     return;
                 }
-                if (player != null) Console.log(progress + " Checking :"+player.getDisplayName()+" action: "+getSurvivor().getAction());
-                else Console.log(progress + " Robot");
+                //if (player != null) Console.log(progress + " Checking :"+player.getDisplayName()+" action: "+getSurvivor().getAction());
+                //else Console.log(progress + " Robot");
 
                 if (player != null && getSurvivor().getAction() != type) {
                     finish();
                     Console.log(player.getDisplayName() + " missed calib because not decoding/healing anymore: "+type);
-                    new MissCalibration(plugin, getSurvivor());
+                    new MissCalibration(getSurvivor());
                     return;
                 }
                 progress += 4;
                 if (progress > 100) {
                     finish();
                     Console.log("Missed calib because reached limit");
-                    new MissCalibration(plugin, getSurvivor());
+                    new MissCalibration(getSurvivor());
                 } else {
                     if (player != null) player.setLevel(progress);
                 }
             }
         };
-        task.runTaskTimer(plugin, 0, 4); // 10 times per second
+        task.runTaskTimer(IdentityV.plugin, 0, 4); // 10 times per second
     }
 
     public void finish() {
@@ -71,16 +69,16 @@ public class Calibration {
     }
 
     public void hit() {
-        //player.sendMessage("Hit calibration at: "+progress);
         // Must be player to hit
         finish();
-        if (progress / 10 == goal / 10) {
+        if (progress / 10 == goal / 10 || ((progress - 1) / 10 == goal / 10)) { // Increase window for high ping and less buggy feel
+            player.playSound(player.getLocation(), Sound.NOTE_PIANO, 1, 2);
             player.sendMessage("Success!");
         } else {
-            new MissCalibration(plugin, survivor);
+            new MissCalibration(survivor);
+            Console.log("Hit at wrong time");
         }
     }
-
 
     public int getProgress() {
         return progress;

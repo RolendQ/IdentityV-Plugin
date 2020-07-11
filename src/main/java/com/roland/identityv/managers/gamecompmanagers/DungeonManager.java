@@ -31,7 +31,7 @@ public class DungeonManager {
             }
         }
         Console.log("Added new dungeon");
-        dungeons.add(new Dungeon(plugin, loc, plugin.getGame()));
+        dungeons.add(new Dungeon(loc, plugin.getGame()));
         return true;
     }
 

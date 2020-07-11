@@ -23,6 +23,7 @@ public class EntityShootBowListener implements Listener {
     }
 
     /**
+     * NOT BEING USED?
      * Detects when entity shoots a bow
      *
      * @param e

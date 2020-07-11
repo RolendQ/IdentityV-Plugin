@@ -102,7 +102,7 @@ public class Wand extends Item {
                 }
 
                 en.remove();
-                for (Player p : Console.plugin.getServer().getOnlinePlayers()) { // TODO plugin weird
+                for (Player p : IdentityV.plugin.getServer().getOnlinePlayers()) {
                     final PlayerConnection connection = ((CraftPlayer) p).getHandle().playerConnection;
                     PacketPlayOutEntityDestroy pa = new PacketPlayOutEntityDestroy(clones.get(villagerID));
                     connection.sendPacket(pa);
